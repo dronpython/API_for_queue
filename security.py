@@ -4,6 +4,7 @@ from fastapi import Depends, FastAPI, HTTPException, status, Request
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
+import os
 
 from models import TokenData, User, UserInDB
 
@@ -11,11 +12,44 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+
+def from_environ(name, default=None, allow_none=True):
+    envname = f"[{name}]"
+    try:
+        var = os.environ[name]
+        return var
+    except:
+        if not allow_none:
+            raise Exception("ENV variable not found: " + envname)
+        else:
+            return default
+
+
+try:
+    cred = {
+        'SECRET_KEY': from_environ('SECRET_KEY'),
+        'ALGORITHM': from_environ('ALGORITHM'),
+        'ACCESS_TOKEN_EXPIRE_MINUTES': from_environ('ACCESS_TOKEN_EXPIRE_MINUTES'),
+    }
+
+    raise Exception
+
+except Exception as EE:
+    try:
+        print('>>>INTEGRATION EXCEPTION!!!')
+        print('>>>', EE)
+        print('>>>INTEGRATION TRY TO LOAD LOCAL ENV!!!')
+        from integration_local import *
+
+    except Exception as EE1:
+        print('>>>INTEGRATION_LOCAL EXCEPTION!!!')
+        print('>>>', EE1)
+
 # to get a string like this run:
 # openssl rand -hex 32
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = cred['SECRET_KEY']
+ALGORITHM = cred['ALGORITHM']
+ACCESS_TOKEN_EXPIRE_MINUTES = cred['ACCESS_TOKEN_EXPIRE_MINUTES']
 
 dt = {"johndoe":0}
 
