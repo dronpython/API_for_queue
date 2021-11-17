@@ -90,3 +90,35 @@ def update_request_by_uuid(uuid: str, field: str, value: str):
             conn.close()
             print('Database connection closed.')
 
+
+def get_queue_statistics(**kwargs):
+    """Получение данных за период"""
+    conn = None
+    try:
+        params = config()
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        paramlist = list()
+        if kwargs.get('period'):
+            paramlist.append(
+                f"SELECT * FROM queue WHERE timestamp >= NOW()::timestamp - INTERVAL '{kwargs['period']} minutes'")
+        else:
+            paramlist.append(f"SELECT * FROM queue WHERE timestamp < NOW()::timestamp")
+        if kwargs['status']:
+            paramlist.append(f"and status = '{kwargs['status']}'")
+        if kwargs['directory']:
+            paramlist.append(f"and endpoint ~ '{kwargs['directory']}'")
+        if kwargs['endpoint']:
+            paramlist.append(f"and endpoint = '{kwargs['endpoint']}'")
+        string_param = ' '.join(paramlist)
+        print(string_param)
+        cur.execute(string_param)
+        data = cur.fetchall()
+        cur.close()
+        return data
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print('Database connection closed.')
