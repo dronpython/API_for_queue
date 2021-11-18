@@ -23,7 +23,7 @@ def config(filename='db.ini', section='postgresql'):
     return db
 
 
-def insert_data(uuid, endpoint, data, author, status, date, time, timestamp):
+def insert_data(table, *args):
     """Добавление записи в базу данных.
     """
     conn = None
@@ -38,8 +38,17 @@ def insert_data(uuid, endpoint, data, author, status, date, time, timestamp):
         # create a cursor
         cur = conn.cursor()
 
+        # join all the arguments
+        insert_arguments = "','".join(args)
+
+        # compose into string with args
+        insert_string = "INSERT INTO {} VALUES(DEFAULT,'{}')"
+
+        # make it sql understandable
+        insert_query = insert_string.format(table, insert_arguments)
+
         # execute a statement
-        cur.execute(f"INSERT INTO queue VALUES('{uuid}', '{endpoint}', '{data}', '{author}', '{status}', '{date}', '{time}', '{timestamp}')")
+        cur.execute(insert_query)
 
         # display the PostgreSQL database server version
         conn.commit()

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Callable, Optional
 from uuid import uuid4
-from datetime import timedelta,timezone, date as datezxc
+from datetime import timedelta
 
 from fastapi import Depends, FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
@@ -22,12 +22,8 @@ class ContextIncludedRoute(APIRoute):
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request) -> Response:
-            queue_id = str(uuid4())
-            path = request.url.path
-            params = request.path_params
-            user = 'qwe'
-            status = 'new'
-            if request.headers.get('auth'):
+            headers = dict(request.headers)
+            if headers.get('auth'):
                 try:
                     data = await decrypt_password(request.headers['Auth'])
                 except InvalidToken:
@@ -39,7 +35,8 @@ class ContextIncludedRoute(APIRoute):
                 username, password, date = data.split('|')
                 print(username, password, date)
                 if username in fake_users_db:
-                    if username not in fake_users_db[username]['username'] or password not in fake_users_db[username]['password']:
+                    if username not in fake_users_db[username]['username'] or\
+                            password not in fake_users_db[username]['password']:
                         raise HTTPException(
                             status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
                             detail='Incorrect username or password',
@@ -57,22 +54,18 @@ class ContextIncludedRoute(APIRoute):
                 print('Unexpected error')
                 return response
 
-            time = datetime.now().time()
-            date = datezxc.today()
-            print(time)
-            print(date)
-            timestamp = datetime.now()
-
+            user = 'qwe'
+            status = 'new'
+            queue_id = str(uuid4())
+            path = request.url.path
+            method = request.method
+            timestamp = str(datetime.now())
             body = await request.body()
             body = body.decode("utf-8")
+            headers_for_insert = str(headers).replace("'", '"')
 
-            print(body)
-            if body:
-                insert_data(queue_id, path, body, user, status, date, time, timestamp)
-            else:
-                insert_data(queue_id, path, None, user, status, date, time, timestamp)
-
-            print(queue_id, path, params, user, status, date, time, timestamp)
+            insert_data('queue_main', queue_id, path, user, timestamp, status, '0', '0', 'sigma')
+            insert_data('queue_requests', queue_id, method, path, body, headers_for_insert, '', timestamp)
 
             return response
 
@@ -135,6 +128,7 @@ async def publish_new_request():
             b = i + j
     return {'s': 'information'}
 
+
 @router.post('/bb/zxc/')
 async def publish_new_request():
     """Медленный метод для тестов"""
@@ -142,6 +136,7 @@ async def publish_new_request():
         for j in range(20000):
             b = i + j
     return {'s': 'information'}
+
 
 @router.post('/bb/qwe/')
 async def publish_new_request():
@@ -170,10 +165,10 @@ async def bb_create_project(data: dict):
     date = datetime.strftime(datetime.now(), '%d.%m.%Y')
     timestamp = '10-10-10'
     insert_data(queue_id, endpoint, data, author, status, date, time, timestamp)
-    return {'l':'b'}
+    return {'l': 'b'}
 
 
-@app.get('/queue/{request_uuid}')
+@app.get('/queue/request/{request_uuid}')
 async def get_request(request_uuid: str, response: Response):
     """Получить информацию о запросе по uuid"""
     result = get_request_by_uuid(request_uuid)
@@ -196,7 +191,7 @@ async def get_request(request_uuid: str, response: Response):
         return {'uuid': request_uuid}
 
 
-@app.put('/queue/{request_uuid}')
+@app.put('/queue/request/{request_uuid}')
 async def update_request(request_uuid: str, request: Request):
     """Обновить информацию о запросе по uuid"""
     body = await request.json()
@@ -204,11 +199,19 @@ async def update_request(request_uuid: str, request: Request):
     return result
 
 
-@app.get('/queue/')
-async def get_queue_info(status: Optional[str] = None, period: Optional[str] = None, endpoint: Optional[str] = None, directory: Optional[str] = None):
+@app.get('/queue/info')
+async def get_queue_info(status: Optional[str] = None, period: Optional[str] = None, endpoint: Optional[str] = None,
+                         directory: Optional[str] = None):
     """Получить информацию об очереди"""
-    result = get_queue_statistics(status=status, period=period,endpoint=endpoint,directory=directory)
+    result = get_queue_statistics(status=status, period=period, endpoint=endpoint, directory=directory)
     return result
+
+
+@app.get('/queue/processing_info')
+async def get_queue_info(status: Optional[str] = None, period: Optional[str] = None, endpoint: Optional[str] = None,
+                         directory: Optional[str] = None):
+    """Получить информацию об очереди"""
+    pass
 
 
 app.include_router(router)
