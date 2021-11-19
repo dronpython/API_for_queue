@@ -19,59 +19,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def from_environ(name, default=None, allow_none=True):
-    envname = f"[{name}]"
-    try:
-        var = os.environ[name]
-        return var
-    except:
-        if not allow_none:
-            raise Exception("ENV variable not found: " + envname)
-        else:
-            return default
-
-
-try:
-    cred = {
-        'SECRET_KEY': from_environ('SECRET_KEY'),
-        'ALGORITHM': from_environ('ALGORITHM'),
-        'ACCESS_TOKEN_EXPIRE_MINUTES': from_environ('ACCESS_TOKEN_EXPIRE_MINUTES'),
-    }
-
-    raise Exception
-
-except Exception as EE:
-    try:
-        print('>>>INTEGRATION EXCEPTION!!!')
-        print('>>>', EE)
-        print('>>>INTEGRATION TRY TO LOAD LOCAL ENV!!!')
-        from integration_local import *
-
-    except Exception as EE1:
-        print('>>>INTEGRATION_LOCAL EXCEPTION!!!')
-        print('>>>', EE1)
-
-# to get a string like this run:
-# openssl rand -hex 32
-SECRET_KEY = cred['SECRET_KEY']
-ALGORITHM = cred['ALGORITHM']
-ACCESS_TOKEN_EXPIRE_MINUTES = cred['ACCESS_TOKEN_EXPIRE_MINUTES']
-SECRET_FOR_TOKEN = cred['SECRET_FOR_TOKEN'].encode()
-SALT_FOR_TOKEN =cred['SALT_FOR_TOKEN'].encode()
-
-dt = {"johndoe":0}
-
-fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
-        "disabled": False,
-        "password": '123'
-    }
-}
-
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 

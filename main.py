@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI, HTTPException, status, Request, Response, 
 from fastapi.routing import APIRoute
 import fastapi
 
-from models import Token, User
+from api.models import Token, User
 from security import OAuth2PasswordRequestForm, authenticate_user, fake_users_db, ACCESS_TOKEN_EXPIRE_MINUTES, \
     create_access_token, get_current_active_user, encrypt_password, decrypt_password, InvalidToken
 from DBConnector import insert_data, get_request_by_uuid, update_request_by_uuid, get_queue_statistics
@@ -91,6 +91,16 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(
         data={'sub': user.username}, expires_delta=access_token_expires
     )
+
+    {
+        status:''
+        message:''
+        *errors:[]
+        payload:{}
+    }
+
+
+
     return {'access_token': access_token, 'token_type': 'bearer'}
 
 
@@ -98,13 +108,18 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 async def login_for_access_token_new(request: Request):
     """Получить токен новый
     """
-    body = await request.json()
-    username = body['username']
-    password = body['password']
-    if username in fake_users_db[username]['username'] and password in fake_users_db[username]['password']:
+    REQ = await request.json()
+    creds = RQ.headers.get("auth")
+    creds = base64.b64decode(creds.replace('Basic ', '')).decode().split(":")
+    
+    username = creds[0]  # body['username']
+    password = creds[1]  # body['password']
+    
+    if LDAP.auth_user(*creds): 
         security_string = username + '|' + password + '|' + '10.01.2020'
         access_token = await encrypt_password(security_string)
         return {'access_token': access_token}
+
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
