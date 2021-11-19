@@ -65,7 +65,7 @@ class DB:
                 print(error)
 
 
-
+    # TODO ... 
     # def get_request_by_uuid(self, uuid: str):
     #     """Получение данных по uuid."""
     #     conn = None
