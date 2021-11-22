@@ -10,6 +10,7 @@ from core.services.security import decrypt_password, encrypt_password, InvalidTo
 from core.settings import config
 from core.connectors.LDAP import ldap
 from core.services.db_service import insert_data, get_request_by_uuid, get_queue_statistics, update_request_by_uuid
+from core.schemas.users import ResponseTemplateOut
 
 
 class ContextIncludedRoute(APIRoute):
@@ -82,14 +83,6 @@ app = FastAPI()
 router = APIRouter(route_class=ContextIncludedRoute)
 
 
-# {
-#     status:''
-#     message:''
-#     *errors:[]
-#     payload:{}
-# }
-
-
 @app.post('/token_new/')
 async def login_for_access_token_new(request: Request):
     """Получить токен новый
@@ -155,27 +148,30 @@ async def bb_create_project(data: dict):
     return {'l': 'b'}
 
 
-@app.get('/queue/request/{request_uuid}')
+@app.get('/queue/request/{request_uuid}', response_model=ResponseTemplateOut)
 async def get_request(request_uuid: str, response: Response):
     """Получить информацию о запросе по uuid"""
     result = get_request_by_uuid(request_uuid)
     if result:
         response.status_code = status.HTTP_200_OK
         if result['status'] != 'finished':
-            return {
+            return {'payload':{
                 'uuid': request_uuid,
                 'status': result['status']
             }
+            }
         else:
-            return {
+            payload = {
                 'uuid': result['uuid'],
                 'endpoint': result['endpoint'],
-                'data': result['data'],
-                'author': result['author']
+                'data': result['timestamp'],
+                'author': result['initiator_login']
             }
+            return ResponseTemplateOut(response_status='200 OK', message='done', payload=payload)
+
     else:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return {'uuid': request_uuid}
+        return ResponseTemplateOut(response_status='200 OK', message='zxc', payload = 'unluck')
 
 
 @app.put('/queue/request/{request_uuid}')
