@@ -1,16 +1,17 @@
 from datetime import datetime
 from typing import Callable, Optional
 from uuid import uuid4
-from datetime import timedelta
+import base64
 
-from fastapi import Depends, FastAPI, HTTPException, status, Request, Response, APIRouter
+from fastapi import FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
 import fastapi
 
-from api.models import Token, User
-from security import OAuth2PasswordRequestForm, authenticate_user, fake_users_db, ACCESS_TOKEN_EXPIRE_MINUTES, \
-    create_access_token, get_current_active_user, encrypt_password, decrypt_password, InvalidToken
-from DBConnector import insert_data, get_request_by_uuid, update_request_by_uuid, get_queue_statistics
+from core.services.security import decrypt_password, encrypt_password, InvalidToken
+from core.settings import settings
+from core.connectors import LDAP
+
+from core.services.db_service import insert_data, get_request_by_uuid, get_queue_statistics, update_request_by_uuid
 
 
 class ContextIncludedRoute(APIRoute):
@@ -34,9 +35,9 @@ class ContextIncludedRoute(APIRoute):
                     )
                 username, password, date = data.split('|')
                 print(username, password, date)
-                if username in fake_users_db:
-                    if username not in fake_users_db[username]['username'] or\
-                            password not in fake_users_db[username]['password']:
+                if username in settings.fake_users_db:
+                    if username not in settings.fake_users_db[username]['username'] or\
+                            password not in settings.fake_users_db[username]['password']:
                         raise HTTPException(
                             status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
                             detail='Incorrect username or password',
@@ -76,22 +77,6 @@ app = FastAPI()
 router = APIRouter(route_class=ContextIncludedRoute)
 
 
-@app.post('/token/', response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    """Получить токен
-    """
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Incorrect username or password',
-            headers={'WWW-Authenticate': 'Bearer'},
-        )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={'sub': user.username}, expires_delta=access_token_expires
-    )
-
     # {
     #     status:''
     #     message:''
@@ -100,16 +85,12 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     # }
 
 
-
-    return {'access_token': access_token, 'token_type': 'bearer'}
-
-
 @app.post('/token_new/')
 async def login_for_access_token_new(request: Request):
     """Получить токен новый
     """
     REQ = await request.json()
-    creds = RQ.headers.get("auth")
+    creds = REQ.headers.get("auth")
     creds = base64.b64decode(creds.replace('Basic ', '')).decode().split(":")
     
     username = creds[0]  # body['username']
@@ -126,13 +107,6 @@ async def login_for_access_token_new(request: Request):
             detail='Incorrect username or password',
             headers={'WWW-Authenticate': 'Bearer'},
         )
-
-
-@app.get('/users/me/', response_model=User)
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
-    """Получить информацию о теккущем пользователе
-    """
-    return current_user
 
 
 @router.post('/endpoint/')
@@ -160,13 +134,6 @@ async def publish_new_request():
         for j in range(20000):
             b = i + j
     return {'s': 'information'}
-
-
-@app.get('/users/me/items/')
-async def read_own_items(current_user: User = Depends(get_current_active_user)):
-    """Получить дополнительную информацию о текущем пользователе
-    """
-    return [{'item_id': 'Foo', 'owner': current_user.username}]
 
 
 @app.post('/bb/create_project')
