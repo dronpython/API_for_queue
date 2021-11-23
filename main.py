@@ -136,18 +136,39 @@ async def publish_new_request():
     return {'s': 'information'}
 
 
-@app.post('/bb/create_project')
-async def bb_create_project(data: dict):
-    queue_id = str(uuid4())
-    endpoint = '/bb/create_project'
-    author = 'cab-sa-mls00001'
-    status = 'new'
+@app.post("/bb/create_project")
+async def bb_create_project(request: Request, data: dict):#, current_user: User = Depends(get_current_user)):
+    queue_id = str(uuid.uuid4())
+    endpoint = request.scope["path"]
+    author = 'johndoe'#current_user.username
+    domain = data.get('domain')
+    status = 'PENDING'
+    priority = '1'
+    work_count = '0'
+    request_type = request.method
+    request_url = request.scope["path"]
     data = str(data).replace("'", '"')
-    time = datetime.strftime(datetime.now(), '%H:%M:%S')
-    date = datetime.strftime(datetime.now(), '%d.%m.%Y')
-    timestamp = '10-10-10'
-    insert_data(queue_id, endpoint, data, author, status, date, time, timestamp)
-    return {'l': 'b'}
+    headers = {}
+    for header in request.scope["headers"]:
+        headers.update({header[0].decode("utf-8"): header[1].decode("utf-8")})
+    headers = str(headers).replace("'", '"')
+
+    db.insert_data('queue_main', queue_id, endpoint, domain, author, status, priority, work_count)
+    db.insert_data('queue_requests', queue_id, request_type, request_url, data, headers, "")
+
+    dt = fake_users_db[author]["dt"]
+    while dt != 0:
+        result = universal_select(select_done_req_id_with_response.format(queue_id))
+        # result = db.select_data('queue_main', 'rqid', 'status', param_name='rqid', param_value=queue_id)[0]
+        # if result.status in ("DONE", "ERROR"):
+        if result:
+            # response_result = db.select_data('queue_responses', 'rqid', 'response_body', param_name='rqid', param_value=queue_id)[0]
+            return {"message": result[0].status, "response": result[0].response_body}
+        else:
+            dt -= 1
+            sleep(1)
+    else:
+        return {"message": "success", "id": queue_id}
 
 
 @app.get('/queue/request/{request_uuid}')
