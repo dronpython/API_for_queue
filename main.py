@@ -1,3 +1,4 @@
+import pathlib
 from datetime import datetime
 from typing import Callable, Optional
 from uuid import uuid4
@@ -5,6 +6,7 @@ from uuid import uuid4
 from fastapi import FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
 import fastapi
+import uvicorn
 
 from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds
 from core.settings import config
@@ -198,3 +200,7 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[str] = N
 
 
 app.include_router(router)
+
+if __name__ == "__main__":
+    cwd = pathlib.Path(__file__).parent.resolve()
+    uvicorn.run("main:app", reload=True, log_config=f"{cwd}/log.ini")
