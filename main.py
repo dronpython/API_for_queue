@@ -12,7 +12,6 @@ from core.services.security import decrypt_password, encrypt_password, InvalidTo
 from core.settings import config, settings
 from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
-# from core.services.db_service import insert_data, get_request_by_uuid, get_queue_statistics, update_request_by_uuid
 from core.schemas.users import ResponseTemplateOut
 
 
@@ -164,7 +163,7 @@ async def bb_create_project(data: dict):
 @app.get('/queue/request/{request_uuid}', response_model=ResponseTemplateOut)
 async def get_request(request_uuid: str, response: Response):
     """Получить информацию о запросе по uuid"""
-    result = get_request_by_uuid(request_uuid)
+    result = DB.get_request_by_uuid(request_uuid)
     if result:
         response.status_code = status.HTTP_200_OK
         if result['status'] != 'finished':
@@ -191,7 +190,7 @@ async def get_request(request_uuid: str, response: Response):
 async def update_request(request_uuid: str, request: Request):
     """Обновить информацию о запросе по uuid"""
     body = await request.json()
-    result = update_request_by_uuid(request_uuid, body['field'], body['value'])
+    result = DB.update_request_by_uuid(request_uuid, body['field'], body['value'])
     return result
 
 
@@ -199,7 +198,7 @@ async def update_request(request_uuid: str, request: Request):
 async def get_queue_info(status: Optional[str] = None, period: Optional[str] = None, endpoint: Optional[str] = None,
                          directory: Optional[str] = None):
     """Получить информацию об очереди"""
-    result = get_queue_statistics(status=status, period=period, endpoint=endpoint, directory=directory)
+    result = DB.get_queue_statistics(status=status, period=period, endpoint=endpoint, directory=directory)
     return result
 
 

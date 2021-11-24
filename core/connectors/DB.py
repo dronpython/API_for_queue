@@ -80,5 +80,54 @@ class DataBase:
             except (Exception, DatabaseError) as error:
                 print(error)
 
+    def get_queue_statistics(self, **kwargs):
+        """Получение данных за период"""
+        with self._connect() as conn:
+            try:
+                cur = conn.cursor(cursor_factory=RealDictCursor)
+                paramlist = list()
+                if kwargs.get('period'):
+                    paramlist.append(
+                        f"SELECT * FROM queue_main WHERE timestamp >= NOW()::timestamp - INTERVAL '{kwargs['period']} minutes'")
+                else:
+                    paramlist.append(f"SELECT * FROM queue_main WHERE timestamp < NOW()::timestamp")
+                if kwargs['status']:
+                    paramlist.append(f"and status = '{kwargs['status']}'")
+                if kwargs['directory']:
+                    paramlist.append(f"and endpoint ~ '{kwargs['directory']}'")
+                if kwargs['endpoint']:
+                    paramlist.append(f"and endpoint = '{kwargs['endpoint']}'")
+                string_param = ' '.join(paramlist)
+                print(string_param)
+                cur.execute(string_param)
+                data = cur.fetchall()
+                cur.close()
+                return data
+            except (Exception, DatabaseError) as error:
+                print(error)
+
+    def get_request_by_uuid(self, uuid: str):
+        """Получение данных по uuid."""
+        with self._connect() as conn:
+            try:
+                cur = conn.cursor(cursor_factory=RealDictCursor)
+                cur.execute(f"SELECT * from queue_main WHERE rqid = '{uuid}'")
+                data = cur.fetchone()
+                cur.close()
+                return data
+            except (Exception, DatabaseError) as error:
+                print(error)
+
+    def update_request_by_uuid(self, uuid: str, field: str, value: str):
+        """Обновление данных по uuid."""
+        with self._connect() as conn:
+            try:
+                cur = conn.cursor(cursor_factory=RealDictCursor)
+                cur.execute(f"UPDATE queue_main SET {field} = '{value}' WHERE rqid = '{uuid}'")
+                DB.conn.commit()
+                cur.close()
+            except (Exception, DatabaseError) as error:
+                print(error)
+
 
 DB = DataBase(settings.DATABASE_CONFIG)

@@ -34,13 +34,14 @@ class Settings(BaseSettings):
         'password': os.environ['db_password']
     }
     fake_users_db = {
-        'johndoe': {
-            'username': 'johndoe',
+        'qwe': {
+            'username': 'qwe',
             'full_name': 'John Doe',
             'email': 'johndoe@example.com',
             'hashed_password': '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
             'disabled': False,
-            'password': '123'
+            'password': '123',
+            'dt': 10000,
         },
         os.environ['old_api_user']: {
             'username': os.environ['old_api_user'],
@@ -48,7 +49,8 @@ class Settings(BaseSettings):
             'email': 'johndoe@example.com',
             'hashed_password': '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
             'disabled': False,
-            'password': os.environ['old_api_password']
+            'password': os.environ['old_api_password'],
+            'dt': 10000
         }
     }
     # to override domains:
