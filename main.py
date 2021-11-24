@@ -64,7 +64,7 @@ class ContextIncludedRoute(APIRoute):
             response: Response = await original_route_handler(request)
 
             user = 'qwe'
-            request_status = 'new'
+            request_status = 'PENDING'
             queue_id = str(uuid4())
             path = request.url.path
             method = request.method
