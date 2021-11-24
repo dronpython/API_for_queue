@@ -69,8 +69,11 @@ class ContextIncludedRoute(APIRoute):
             path = request.url.path
             method = request.method
             timestamp = str(datetime.now())
-            body = await request.json()
-            body = str(body).replace("'", '"')
+            if request.body():
+                body = await request.json()
+                body = str(body).replace("'", '"')
+            else:
+                body = ""
             headers = {}
             for header in request.scope["headers"]:
                 headers.update({header[0].decode("utf-8"): header[1].decode("utf-8")})
