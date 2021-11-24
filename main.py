@@ -9,9 +9,10 @@ import fastapi
 import uvicorn
 
 from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds
-from core.settings import config
+from core.settings import config, settings
+from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
-from core.services.db_service import insert_data, get_request_by_uuid, get_queue_statistics, update_request_by_uuid
+# from core.services.db_service import insert_data, get_request_by_uuid, get_queue_statistics, update_request_by_uuid
 from core.schemas.users import ResponseTemplateOut
 
 
@@ -23,7 +24,7 @@ class ContextIncludedRoute(APIRoute):
     def get_route_handler(self) -> Callable:
         original_route_handler = super().get_route_handler()
 
-        async def custom_route_handler(request: Request) -> Response:
+        async def custom_route_handler(request: Request):
             headers = request.headers.get('authorization')
             if headers:
                 if 'Bearer' in headers:
@@ -79,9 +80,24 @@ class ContextIncludedRoute(APIRoute):
                 headers.update({header[0].decode("utf-8"): header[1].decode("utf-8")})
             headers = str(headers).replace("'", '"')
 
-            insert_data('queue_main', queue_id, path, 'SIGMA', user, request_status, '0', '0',)
-            insert_data('queue_requests', queue_id, method, path, body, headers, '')
+            DB.insert_data('queue_main', queue_id, path, 'SIGMA', user, request_status, '0', '0',)
+            DB.insert_data('queue_requests', queue_id, method, path, body, headers, '')
 
+            dt = settings.fake_users_db[user]["dt"]
+            while dt != 0:
+                result = DB.universal_select(select_done_req_with_response.format(queue_id))
+                if result:
+                    body = {"message": result[0].status, "response": result[0].response_body}
+                    response.body = str(body).encode()
+                    response.headers['content-length'] = str(len(response.body))
+                    return response
+
+                else:
+                    dt -= 1
+            else:
+                body = {"message": "success", "id": queue_id}
+            response.body = str(body).encode()
+            response.headers['content-length'] = str(len(response.body))
             return response
 
         return custom_route_handler
@@ -139,18 +155,10 @@ async def publish_new_request():
     return {'s': 'information'}
 
 
-@app.post('/bb/create_project')
+@router.post('/bb/create_project')
 async def bb_create_project(data: dict):
-    queue_id = str(uuid4())
-    endpoint = '/bb/create_project'
-    author = 'cab-sa-mls00001'
-    status = 'new'
-    data = str(data).replace("'", '"')
-    time = datetime.strftime(datetime.now(), '%H:%M:%S')
-    date = datetime.strftime(datetime.now(), '%d.%m.%Y')
-    timestamp = '10-10-10'
-    insert_data(queue_id, endpoint, data, author, status, date, time, timestamp)
-    return {'l': 'b'}
+    print(1)
+    return {"a": "b"}
 
 
 @app.get('/queue/request/{request_uuid}', response_model=ResponseTemplateOut)
