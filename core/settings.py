@@ -30,8 +30,8 @@ class Settings(BaseSettings):
         'host': os.environ['db_host'],
         'port': os.environ['db_port'],
         'database': os.environ['db_name'],
-        'user': os.environ['swmlmaster'],
-        'password': os.environ['SWMLmaster1']
+        'user': os.environ['db_user'],
+        'password': os.environ['db_password']
     }
     fake_users_db = {
         'johndoe': {
