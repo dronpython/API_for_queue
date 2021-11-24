@@ -73,8 +73,8 @@ class ContextIncludedRoute(APIRoute):
             body = body.decode("utf-8")
             headers_for_insert = str(request.headers).replace("'", '"')
 
-            insert_data('queue_main', queue_id, path, user, timestamp, request_status, '0', '0', 'sigma')
-            insert_data('queue_requests', queue_id, method, path, body, headers_for_insert, '', timestamp)
+            insert_data('queue_main', queue_id, path, 'sigma', user, request_status, '0', '0',)
+            insert_data('queue_requests', queue_id, method, path, body, headers_for_insert, '')
 
             return response
 
