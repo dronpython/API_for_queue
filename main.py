@@ -67,18 +67,15 @@ class ContextIncludedRoute(APIRoute):
             queue_id = str(uuid4())
             path = request.url.path
             method = request.method
-            timestamp = str(datetime.now())
+            body = "{}"
             if await request.body():
                 body = await request.json()
                 body = str(body).replace("'", '"')
-            else:
-                body = "{}"
-            headers = {}
-            for header in request.scope["headers"]:
-                headers.update({header[0].decode("utf-8"): header[1].decode("utf-8")})
+
+            headers = dict(request.headers)
             headers = str(headers).replace("'", '"')
 
-            DB.insert_data('queue_main', queue_id, path, 'SIGMA', username, request_status, '0', '0',)
+            DB.insert_data('queue_main', queue_id, path, 'SIGMA', username, request_status, '0', '0', )
             DB.insert_data('queue_requests', queue_id, method, path, body, headers, '')
 
             dt = settings.fake_users_db[username]["dt"]
@@ -166,7 +163,7 @@ async def get_request(request_uuid: str, response: Response):
     if result:
         response.status_code = status.HTTP_200_OK
         if result['status'] != 'finished':
-            return {'payload':{
+            return {'payload': {
                 'uuid': request_uuid,
                 'status': result['status']
             }
@@ -182,7 +179,7 @@ async def get_request(request_uuid: str, response: Response):
 
     else:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return ResponseTemplateOut(response_status='200 OK', message='zxc', payload = 'unluck')
+        return ResponseTemplateOut(response_status='200 OK', message='zxc', payload='unluck')
 
 
 @app.put('/queue/request/{request_uuid}')
@@ -207,9 +204,10 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[str] = N
     """Получить информацию об очереди"""
     pass
 
+
 @router.post('/api/v3/nexus/info')
 async def get_nexus_info():
-    return {'ab':'bb'}
+    return {'ab': 'bb'}
 
 
 app.include_router(router)

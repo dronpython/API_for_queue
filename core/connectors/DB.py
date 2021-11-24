@@ -9,7 +9,6 @@ JOIN queue_responses qr on qm.rqid = qr.rqid
 WHERE qm.rqid = \'{}\' AND (qm.status = 'DONE' OR qm.status = 'ERROR')"""
 
 
-
 class DataBase:
     def __init__(self, database_config: dict):
         self.config = database_config
