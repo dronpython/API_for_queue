@@ -71,10 +71,13 @@ class ContextIncludedRoute(APIRoute):
             timestamp = str(datetime.now())
             body = await request.body()
             body = body.decode("utf-8")
-            headers_for_insert = str(request.headers).replace("'", '"')
+            headers = {}
+            for header in request.scope["headers"]:
+                headers.update({header[0].decode("utf-8"): header[1].decode("utf-8")})
+            headers = str(headers).replace("'", '"')
 
-            insert_data('queue_main', queue_id, path, 'sigma', user, request_status, '0', '0',)
-            insert_data('queue_requests', queue_id, method, path, body, headers_for_insert, '')
+            insert_data('queue_main', queue_id, path, 'SIGMA', user, request_status, '0', '0',)
+            insert_data('queue_requests', queue_id, method, path, body, headers, '')
 
             return response
 
@@ -120,10 +123,7 @@ async def publish_new_request():
 
 @router.post('/bb/zxc/')
 async def publish_new_request():
-    """Медленный метод для тестов"""
-    for i in range(10000):
-        for j in range(20000):
-            b = i + j
+    """Быстрый метод для тестов"""
     return {'s': 'information'}
 
 
@@ -197,6 +197,11 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[str] = N
                          directory: Optional[str] = None):
     """Получить информацию об очереди"""
     pass
+
+@router.post('/api/v3/nexus/info')
+async def get_nexus_info():
+    result = 2
+    return result
 
 
 app.include_router(router)
