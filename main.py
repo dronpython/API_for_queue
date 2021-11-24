@@ -63,7 +63,6 @@ class ContextIncludedRoute(APIRoute):
                 )
             response: Response = await original_route_handler(request)
 
-            user = 'qwe'
             request_status = 'PENDING'
             queue_id = str(uuid4())
             path = request.url.path
@@ -79,10 +78,10 @@ class ContextIncludedRoute(APIRoute):
                 headers.update({header[0].decode("utf-8"): header[1].decode("utf-8")})
             headers = str(headers).replace("'", '"')
 
-            DB.insert_data('queue_main', queue_id, path, 'SIGMA', user, request_status, '0', '0',)
+            DB.insert_data('queue_main', queue_id, path, 'SIGMA', username, request_status, '0', '0',)
             DB.insert_data('queue_requests', queue_id, method, path, body, headers, '')
 
-            dt = settings.fake_users_db[user]["dt"]
+            dt = settings.fake_users_db[username]["dt"]
             while dt != 0:
                 result = DB.universal_select(select_done_req_with_response.format(queue_id))
                 if result:
