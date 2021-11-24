@@ -69,7 +69,7 @@ class ContextIncludedRoute(APIRoute):
             path = request.url.path
             method = request.method
             timestamp = str(datetime.now())
-            if request.body():
+            if await request.body():
                 body = await request.json()
                 body = str(body).replace("'", '"')
             else:
