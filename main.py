@@ -75,7 +75,7 @@ class ContextIncludedRoute(APIRoute):
                 headers.update({header.decode('UTF-8'): value.decode('UTF-8')})
             headers = str(headers).replace("'", '"')
             # ToDo check domain
-            DB.insert_data('queue_main', request_id, path, 'SIGMA', request_id, request_status)
+            DB.insert_data('queue_main', request_id, path, 'SIGMA', username, request_status)
             DB.insert_data('queue_requests', request_id, method, path, body, headers, '')
 
             dt: int = settings.fake_users_db[username]["dt"]
