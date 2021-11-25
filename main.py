@@ -156,22 +156,22 @@ async def bb_create_project(data: dict):
     return {"a": "b"}
 
 
-@app.get('/queue/request/{request_rqid}', response_model=ResponseTemplateOut)
-async def get_request(request_rqid: str, response: Response):
+@app.get('/queue/request/{request_id}', response_model=ResponseTemplateOut)
+async def get_request(request_id: str, response: Response):
     """Получить информацию о запросе по request_uuid"""
-    result: dict = DB.select_data('queue_main', 'status', param_name='rqid', param_value=request_rqid)
+    result: dict = DB.select_data('queue_main', 'status', param_name='request_id', param_value=request_id)
     if result:
-        result = result[0]
+        result = result[0]  # because fetch all
         response.status_code = status.HTTP_200_OK
         if result['status'] != 'PENDING':
             return {'payload': {
-                'rqid': request_rqid,
+                'request_id': request_id,
                 'status': result['status']
             }
             }
         else:
             payload = {
-                'rqid': result['rqid'],
+                'request_id': result['request_id'],
                 'endpoint': result['endpoint'],
                 'data': result['timestamp'],
                 'author': result['login']
@@ -183,14 +183,14 @@ async def get_request(request_rqid: str, response: Response):
         return ResponseTemplateOut(response_status='200 OK', message='zxc', payload='unluck')
 
 
-@app.put('/queue/request/{request_rqid}')
-async def update_request(request_rqid: str, request: Request):
-    """Обновить информацию о запросе по rqid"""
+@app.put('/queue/request/{request_id}')
+async def update_request(request_id: str, request: Request):
+    """Обновить информацию о запросе по request_id"""
     body: dict = await request.json()
     main_table = 'queue_main'
-    param_name = 'rqid'
+    param_name = 'request_id'
     result: dict = DB.update_data(main_table, field_name=body['field'], field_value=body['value'], param_name=param_name,
-                                  param_value=request_rqid)
+                                  param_value=request_id)
     return result
 
 
@@ -212,8 +212,9 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[str] = N
 @app.post('/api/v3/nexus/info')
 async def get_nexus_info():
     # result = DB.select_data('queue_main','status',param_name='status',param_value ='PENDING')
-    result = DB.update_data('queue_main', field_name='status', field_value='FINISHED', param_name='rqid',
-                            param_value='694cdccd-fde9-4440-8176-2452095cb703')
+    # result = DB.update_data('queue_main', field_name='status', field_value='FINISHED', param_name='request_id',
+    #                         param_value='694cdccd-fde9-4440-8176-2452095cb703')
+    result = {'aa':'ss'}
     return result
 
 
