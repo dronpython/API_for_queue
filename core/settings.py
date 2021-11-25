@@ -49,7 +49,7 @@ class Settings(BaseSettings):
             'hashed_password': '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
             'disabled': False,
             'password': os.environ['old_api_password'],
-            'dt': 0
+            'dt': 100
         }
     }
     # to override domains:
