@@ -12,6 +12,7 @@ class User(BaseModel):
 class UserInDB(User):
     hashed_password: str
 
+
 class ResponseTemplateOut(BaseModel):
     response_status: str = '200 OK'
     message: str = 'default message'

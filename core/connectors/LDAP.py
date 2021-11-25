@@ -24,14 +24,17 @@ class LDAP:
         self.lconn = False
         self.attributes = ["*"]
         self.group_attributes = ["cn", "distinguishedName"]
-        self.group_attributes_all = ['cn', 'dSCorePropagationData', 'description', 'distinguishedName', 'groupType', 'instanceType', 'managedBy', 'member', 'name', 'objectCategory', 'objectClass', 'objectGUID', 'objectSid', 'sAMAccountName', 'sAMAccountType', 'uSNChanged', 'uSNCreated', 'whenChanged', 'whenCreated']
+        self.group_attributes_all = ['cn', 'dSCorePropagationData', 'description', 'distinguishedName', 'groupType',
+                                     'instanceType', 'managedBy', 'member', 'name', 'objectCategory', 'objectClass',
+                                     'objectGUID', 'objectSid', 'sAMAccountName', 'sAMAccountType', 'uSNChanged',
+                                     'uSNCreated', 'whenChanged', 'whenCreated']
         self.__connect(self.server, self.domain, self.login, self.password)
 
     def __connect(self, server, domain, login, password):
         try:
-            S = Server(server)
+            server_connection = Server(server)
             self.lconn = Connection(
-                S,
+                server_connection,
                 user=domain + "\\" + login,
                 password=password,
                 authentication="NTLM",

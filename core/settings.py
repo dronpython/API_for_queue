@@ -17,7 +17,6 @@ class SubModel(BaseModel):
 
 
 class Settings(BaseSettings):
-
     auth_key: str = 'qe'
     # api_key: str = Field(..., env='my_api_key')
     api_key: str = 'qwe'
@@ -90,6 +89,7 @@ class Settings(BaseSettings):
                 'search_tree_ca': os.environ['ldap_search_tree_ca']
             }
         }
+
 
 settings = Settings()
 config = Settings().Config()

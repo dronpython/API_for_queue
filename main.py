@@ -1,12 +1,10 @@
 import pathlib
-from datetime import datetime
 from typing import Callable, Optional
 from uuid import uuid4
 
+import uvicorn
 from fastapi import FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
-import fastapi
-import uvicorn
 
 from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds
 from core.settings import config, settings
@@ -24,15 +22,15 @@ class ContextIncludedRoute(APIRoute):
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request):
-            headers = request.headers.get('authorization')
+            headers: str = request.headers.get('authorization')
             if headers:
                 if 'Bearer' in headers:
                     try:
-                        token = headers.replace('Bearer ', '')
-                        data = await decrypt_password(token)
+                        token: str = headers.replace('Bearer ', '')
+                        data: str = await decrypt_password(token)
                     except InvalidToken:
                         raise HTTPException(
-                            status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
+                            status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Invalid token',
                         )
                     username, password, date = data.split('|')
@@ -63,22 +61,22 @@ class ContextIncludedRoute(APIRoute):
                 )
             response: Response = await original_route_handler(request)
 
-            request_status = 'PENDING'
-            queue_id = str(uuid4())
-            path = request.url.path
-            method = request.method
+            request_status: str = 'PENDING'
+            queue_id: str = str(uuid4())
+            path: str = request.url.path
+            method: str = request.method
             body = "{}"
             if await request.body():
                 body = await request.json()
-                body = str(body).replace("'", '"')
+                body = str(body).replace("'", '"')  # для корректного добавления записи в базу
 
-            headers = dict(request.headers)
-            headers = str(headers).replace("'", '"')
+            headers: dict = dict(request.headers)
+            headers = str(headers).replace("'", '"')  # для корректного добавления записи в базу
 
             DB.insert_data('queue_main', queue_id, path, 'SIGMA', username, request_status, '0', '0', )
             DB.insert_data('queue_requests', queue_id, method, path, body, headers, '')
 
-            dt = settings.fake_users_db[username]["dt"]
+            dt: int = settings.fake_users_db[username]["dt"]
             while dt != 0:
                 result = DB.universal_select(select_done_req_with_response.format(queue_id))
                 if result:
@@ -113,11 +111,11 @@ async def login_for_access_token_new(request: Request):
             detail='Can not find auth header',
         )
     username, password = credentials_answer
-    result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
+    result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
                               password=password)
     if result:
-        security_string = username + '|' + password + '|' + '10.01.2020'
-        access_token = await encrypt_password(security_string)
+        security_string: str = username + '|' + password + '|' + '10.01.2020'
+        access_token: str = await encrypt_password(security_string)
         return {'access_token': access_token}
     else:
         raise HTTPException(
@@ -159,7 +157,7 @@ async def bb_create_project(data: dict):
 @app.get('/queue/request/{request_uuid}', response_model=ResponseTemplateOut)
 async def get_request(request_uuid: str, response: Response):
     """Получить информацию о запросе по uuid"""
-    result = DB.get_request_by_uuid(request_uuid)
+    result: dict = DB.get_request_by_uuid(request_uuid)
     if result:
         response.status_code = status.HTTP_200_OK
         if result['status'] != 'finished':
@@ -185,8 +183,8 @@ async def get_request(request_uuid: str, response: Response):
 @app.put('/queue/request/{request_uuid}')
 async def update_request(request_uuid: str, request: Request):
     """Обновить информацию о запросе по uuid"""
-    body = await request.json()
-    result = DB.update_request_by_uuid(request_uuid, body['field'], body['value'])
+    body: dict = await request.json()
+    result: dict = DB.update_request_by_uuid(request_uuid, body['field'], body['value'])
     return result
 
 
@@ -194,7 +192,7 @@ async def update_request(request_uuid: str, request: Request):
 async def get_queue_info(status: Optional[str] = None, period: Optional[str] = None, endpoint: Optional[str] = None,
                          directory: Optional[str] = None):
     """Получить информацию об очереди"""
-    result = DB.get_queue_statistics(status=status, period=period, endpoint=endpoint, directory=directory)
+    result: dict = DB.get_queue_statistics(status=status, period=period, endpoint=endpoint, directory=directory)
     return result
 
 

@@ -1,5 +1,4 @@
 from psycopg2 import connect, DatabaseError
-from configparser import ConfigParser
 from psycopg2.extras import NamedTupleCursor, RealDictCursor
 from core.settings import settings
 from typing import Union
