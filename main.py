@@ -62,23 +62,25 @@ class ContextIncludedRoute(APIRoute):
             response: Response = await original_route_handler(request)
 
             request_status: str = 'PENDING'
-            rqid: str = str(uuid4())
+            request_id: str = str(uuid4())
             path: str = request.url.path
             method: str = request.method
-            body = "{}"
             if await request.body():
                 body = await request.json()
-                body = str(body).replace("'", '"')  # для корректного добавления записи в базу
-
-            headers: dict = dict(request.headers)
-            headers = str(headers).replace("'", '"')  # для корректного добавления записи в базу
-
-            DB.insert_data('queue_main', rqid, path, 'SIGMA', username, request_status, '0', '0', )
-            DB.insert_data('queue_requests', rqid, method, path, body, headers, '')
+                body = str(body).replace("'", '"')
+            else:
+                body = "{}"
+            headers: dict = {}
+            for header, value in request.scope["headers"]:
+                headers.update({header.decode('UTF-8'): value.decode('UTF-8')})
+            headers = str(headers).replace("'", '"')
+            # ToDo check domain
+            DB.insert_data('queue_main', request_id, path, 'SIGMA', username, request_status)
+            DB.insert_data('queue_requests', request_id, method, path, body, headers, '')
 
             dt: int = settings.fake_users_db[username]["dt"]
             while dt != 0:
-                result = DB.universal_select(select_done_req_with_response.format(rqid))
+                result = DB.universal_select(select_done_req_with_response.format(request_id))
                 if result:
                     body = {"message": result[0].status, "response": result[0].response_body}
                     response.body = str(body).encode()
@@ -88,7 +90,7 @@ class ContextIncludedRoute(APIRoute):
                 else:
                     dt -= 1
             else:
-                body = {"message": "success", "id": rqid}
+                body = {"message": "success", "id": request_id}
             response.body = str(body).encode()
             response.headers['content-length'] = str(len(response.body))
             return response
