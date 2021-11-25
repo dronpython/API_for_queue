@@ -62,7 +62,7 @@ class ContextIncludedRoute(APIRoute):
             response: Response = await original_route_handler(request)
 
             request_status: str = 'PENDING'
-            queue_id: str = str(uuid4())
+            rqid: str = str(uuid4())
             path: str = request.url.path
             method: str = request.method
             body = "{}"
@@ -73,12 +73,12 @@ class ContextIncludedRoute(APIRoute):
             headers: dict = dict(request.headers)
             headers = str(headers).replace("'", '"')  # для корректного добавления записи в базу
 
-            DB.insert_data('queue_main', queue_id, path, 'SIGMA', username, request_status, '0', '0', )
-            DB.insert_data('queue_requests', queue_id, method, path, body, headers, '')
+            DB.insert_data('queue_main', rqid, path, 'SIGMA', username, request_status, '0', '0', )
+            DB.insert_data('queue_requests', rqid, method, path, body, headers, '')
 
             dt: int = settings.fake_users_db[username]["dt"]
             while dt != 0:
-                result = DB.universal_select(select_done_req_with_response.format(queue_id))
+                result = DB.universal_select(select_done_req_with_response.format(rqid))
                 if result:
                     body = {"message": result[0].status, "response": result[0].response_body}
                     response.body = str(body).encode()
@@ -88,7 +88,7 @@ class ContextIncludedRoute(APIRoute):
                 else:
                     dt -= 1
             else:
-                body = {"message": "success", "id": queue_id}
+                body = {"message": "success", "id": rqid}
             response.body = str(body).encode()
             response.headers['content-length'] = str(len(response.body))
             return response
@@ -154,37 +154,37 @@ async def bb_create_project(data: dict):
     return {"a": "b"}
 
 
-@app.get('/queue/request/{request_uuid}', response_model=ResponseTemplateOut)
-async def get_request(request_uuid: str, response: Response):
-    """Получить информацию о запросе по uuid"""
-    result: dict = DB.get_request_by_uuid(request_uuid)
+@app.get('/queue/request/{request_rqid}', response_model=ResponseTemplateOut)
+async def get_request(request_rqid: str, response: Response):
+    """Получить информацию о запросе по request_uuid"""
+    result: dict = DB.get_request_by_rqid(request_rqid)
     if result:
         response.status_code = status.HTTP_200_OK
-        if result['status'] != 'finished':
+        if result['status'] != 'PENDING':
             return {'payload': {
-                'uuid': request_uuid,
+                'rqid': request_rqid,
                 'status': result['status']
             }
             }
         else:
             payload = {
-                'uuid': result['uuid'],
+                'rqid': result['rqid'],
                 'endpoint': result['endpoint'],
                 'data': result['timestamp'],
-                'author': result['initiator_login']
+                'author': result['login']
             }
-            return ResponseTemplateOut(response_status='200 OK', message='done', payload=payload)
+            return ResponseTemplateOut(response_status='200 zxc', message='done', payload=payload)
 
     else:
         response.status_code = status.HTTP_404_NOT_FOUND
         return ResponseTemplateOut(response_status='200 OK', message='zxc', payload='unluck')
 
 
-@app.put('/queue/request/{request_uuid}')
-async def update_request(request_uuid: str, request: Request):
-    """Обновить информацию о запросе по uuid"""
+@app.put('/queue/request/{request_rqid}')
+async def update_request(request_rqid: str, request: Request):
+    """Обновить информацию о запросе по rqid"""
     body: dict = await request.json()
-    result: dict = DB.update_request_by_uuid(request_uuid, body['field'], body['value'])
+    result: dict = DB.update_request_by_rqid(request_rqid, body['field'], body['value'])
     return result
 
 

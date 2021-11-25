@@ -86,7 +86,7 @@ class DataBase:
                 paramlist = list()
                 if kwargs.get('period'):
                     paramlist.append(
-                        f"SELECT * FROM queue_main WHERE timestamp >= NOW()::timestamp - INTERVAL '{kwargs['period']} minutes'")
+                        f"SELECT * FROM queue_main WHERE timestamp >= NOW()::timestamp - INTERVAL '{kwargs['period']} minutes'",)
                 else:
                     paramlist.append(f"SELECT * FROM queue_main WHERE timestamp < NOW()::timestamp")
                 if kwargs['status']:
@@ -104,24 +104,24 @@ class DataBase:
             except (Exception, DatabaseError) as error:
                 print(error)
 
-    def get_request_by_uuid(self, uuid: str):
-        """Получение данных по uuid."""
+    def get_request_by_rqid(self, rqid: str):
+        """Получение данных по request_rqid."""
         with self._connect() as conn:
             try:
                 cur = conn.cursor(cursor_factory=RealDictCursor)
-                cur.execute(f"SELECT * from queue_main WHERE rqid = '{uuid}'")
+                cur.execute(f"SELECT * from queue_main WHERE rqid = '{rqid}'")
                 data = cur.fetchone()
                 cur.close()
                 return data
             except (Exception, DatabaseError) as error:
                 print(error)
 
-    def update_request_by_uuid(self, uuid: str, field: str, value: str):
-        """Обновление данных по uuid."""
+    def update_request_by_rqid(self, rqid: str, field: str, value: str):
+        """Обновление данных по rqid."""
         with self._connect() as conn:
             try:
                 cur = conn.cursor(cursor_factory=RealDictCursor)
-                cur.execute(f"UPDATE queue_main SET {field} = '{value}' WHERE rqid = '{uuid}'")
+                cur.execute(f"UPDATE queue_main SET {field} = '{value}' WHERE rqid = '{rqid}'")
                 DB.conn.commit()
                 cur.close()
             except (Exception, DatabaseError) as error:
