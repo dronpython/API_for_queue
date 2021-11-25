@@ -112,7 +112,7 @@ async def login_for_access_token_new(request: Request):
         )
     username, password = credentials_answer
     result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
-                              password=password)
+                                    password=password)
     if result:
         security_string: str = username + '|' + password + '|' + '10.01.2020'
         access_token: str = await encrypt_password(security_string)
@@ -157,8 +157,9 @@ async def bb_create_project(data: dict):
 @app.get('/queue/request/{request_rqid}', response_model=ResponseTemplateOut)
 async def get_request(request_rqid: str, response: Response):
     """Получить информацию о запросе по request_uuid"""
-    result: dict = DB.get_request_by_rqid(request_rqid)
+    result: dict = DB.select_data('queue_main', 'status', param_name='rqid', param_value=request_rqid)
     if result:
+        result = result[0]
         response.status_code = status.HTTP_200_OK
         if result['status'] != 'PENDING':
             return {'payload': {
@@ -184,12 +185,15 @@ async def get_request(request_rqid: str, response: Response):
 async def update_request(request_rqid: str, request: Request):
     """Обновить информацию о запросе по rqid"""
     body: dict = await request.json()
-    result: dict = DB.update_request_by_rqid(request_rqid, body['field'], body['value'])
+    main_table = 'queue_main'
+    param_name = 'rqid'
+    result: dict = DB.update_data(main_table, field_name=body['field'], field_value=body['value'], param_name=param_name,
+                                  param_value=request_rqid)
     return result
 
 
 @app.get('/queue/info')
-async def get_queue_info(status: Optional[str] = None, period: Optional[str] = None, endpoint: Optional[str] = None,
+async def get_queue_info(status: Optional[str] = None, period: Optional[int] = None, endpoint: Optional[str] = None,
                          directory: Optional[str] = None):
     """Получить информацию об очереди"""
     result: dict = DB.get_queue_statistics(status=status, period=period, endpoint=endpoint, directory=directory)
@@ -203,9 +207,12 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[str] = N
     pass
 
 
-@router.post('/api/v3/nexus/info')
+@app.post('/api/v3/nexus/info')
 async def get_nexus_info():
-    return {'ab': 'bb'}
+    # result = DB.select_data('queue_main','status',param_name='status',param_value ='PENDING')
+    result = DB.update_data('queue_main', field_name='status', field_value='FINISHED', param_name='rqid',
+                            param_value='694cdccd-fde9-4440-8176-2452095cb703')
+    return result
 
 
 app.include_router(router)

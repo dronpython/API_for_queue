@@ -1,4 +1,4 @@
-from psycopg2 import connect, DatabaseError
+from psycopg2 import connect, DatabaseError, sql
 from psycopg2.extras import NamedTupleCursor, RealDictCursor
 from core.settings import settings
 from typing import Union
@@ -24,108 +24,84 @@ class DataBase:
     def select_data(self, table, *args, param_name: Union[str, int] = 1, param_value: Union[str, int] = 1):
         """Выборка записей из базы данных."""
         with self._connect() as conn:
-            try:
-                cur = conn.cursor(cursor_factory=NamedTupleCursor)
-                select_arguments = '","'.join(args)
-                select_string = 'SELECT "{}" FROM {} WHERE {}={}' if isinstance(param_name, int) \
-                    else 'SELECT "{}" FROM {} WHERE "{}"=\'{}\''
-                select_query = select_string.format(select_arguments, table, param_name, param_value)
-                cur.execute(select_query)
-                query_result = cur.fetchall()
-                cur.close()
-            except (Exception, DatabaseError) as error:
-                print(error)
-                query_result = None
-            return query_result
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                try:
+                    select_string = 'SELECT * FROM {} WHERE {}=%s'
+                    select_query = sql.SQL(select_string).format(sql.Identifier(table), sql.Identifier(param_name)
+                                                                 if isinstance(param_name, str)
+                                                                 else sql.Literal(param_name)
+                                                                 )
+                    print(select_query.as_string(conn))
+                    cur.execute(select_query, (param_value,))
+                    query_result = cur.fetchall()
+                except (Exception, DatabaseError) as error:
+                    print(error)
+                    query_result = None
+                return query_result
 
     def insert_data(self, table, *args):
         """Добавление записи в базу данных."""
         with self._connect() as conn:
-            try:
-                cur = conn.cursor()
-                insert_arguments = "','".join(args)
-                insert_string = "INSERT INTO {} VALUES(DEFAULT,'{}')"
-                insert_query = insert_string.format(table, insert_arguments)
-                cur.execute(insert_query)
-                conn.commit()
-                cur.close()
-            except (Exception, DatabaseError) as error:
-                print(error)
+            with conn.cursor() as cur:
+                try:
+                    insert_string = "INSERT INTO {} VALUES(DEFAULT, {})"
+                    query = sql.SQL(insert_string).format(sql.Identifier(table),
+                                                          sql.SQL(', ').join(sql.Placeholder() * len(args)))
+                    cur.execute(query, args)
+                    conn.commit()
+                except (Exception, DatabaseError) as error:
+                    print(error)
 
     def update_data(self, table, **kwargs):
         """ Обновленме записи в базе данных."""
         with self._connect() as conn:
-            try:
-                cur = conn.cursor()
-                insert_string = 'UPDATE {} SET "{}"=\'{}\' WHERE "{}"=\'{}\''
-                insert_query = insert_string.format(table, kwargs['field_name'], kwargs['field_value'],
-                                                    kwargs['param_name'], kwargs['param_value'])
-                cur.execute(insert_query)
-                conn.commit()
-                cur.close()
-            except (Exception, DatabaseError) as error:
-                print(error)
+            with conn.cursor() as cur:
+                try:
+                    insert_string = 'UPDATE {} SET {}=%s WHERE {}=%s'
+                    query = sql.SQL(insert_string).format(sql.Identifier(table), sql.Identifier(kwargs['field_name']),
+                                                          sql.Identifier(kwargs['param_name']))
+                    cur.execute(query, (kwargs['field_value'],kwargs['param_value'])
+                                )
+                    conn.commit()
+                except (Exception, DatabaseError) as error:
+                    print(error)
 
     def universal_select(self, query):
         """Выборка записей из базы данных."""
         with self._connect() as conn:
-            try:
-                cur = conn.cursor(cursor_factory=NamedTupleCursor)
-                cur.execute(query)
-                data = cur.fetchall()
-                cur.close()
-                return data
-            except (Exception, DatabaseError) as error:
-                print(error)
+            with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+                try:
+                    cur.execute(query)
+                    data = cur.fetchall()
+                    return data
+                except (Exception, DatabaseError) as error:
+                    print(error)
 
     def get_queue_statistics(self, **kwargs):
         """Получение данных за период"""
         with self._connect() as conn:
-            try:
-                cur = conn.cursor(cursor_factory=RealDictCursor)
-                paramlist = list()
-                if kwargs.get('period'):
-                    paramlist.append(
-                        f"SELECT * FROM queue_main WHERE timestamp >= NOW()::timestamp - INTERVAL '{kwargs['period']} minutes'",)
-                else:
-                    paramlist.append(f"SELECT * FROM queue_main WHERE timestamp < NOW()::timestamp")
-                if kwargs['status']:
-                    paramlist.append(f"and status = '{kwargs['status']}'")
-                if kwargs['directory']:
-                    paramlist.append(f"and endpoint ~ '{kwargs['directory']}'")
-                if kwargs['endpoint']:
-                    paramlist.append(f"and endpoint = '{kwargs['endpoint']}'")
-                string_param = ' '.join(paramlist)
-                print(string_param)
-                cur.execute(string_param)
-                data = cur.fetchall()
-                cur.close()
-                return data
-            except (Exception, DatabaseError) as error:
-                print(error)
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                try:
+                    paramlist = list()
+                    if kwargs.get('period'):
+                        paramlist.append(
+                            f"SELECT * FROM queue_main WHERE timestamp >= NOW()::timestamp - INTERVAL '%(period)s minutes'", )
+                    else:
+                        paramlist.append(f"SELECT * FROM queue_main WHERE timestamp < NOW()::timestamp")
+                    if kwargs['status']:
+                        paramlist.append(f"and status = %(status)s")
+                    if kwargs['directory']:
+                        paramlist.append(f"and endpoint ~ %(directory)s")
+                    if kwargs['endpoint']:
+                        paramlist.append(f"and endpoint = %(endpoint)s")
+                    string_param = ' '.join(paramlist)
 
-    def get_request_by_rqid(self, rqid: str):
-        """Получение данных по request_rqid."""
-        with self._connect() as conn:
-            try:
-                cur = conn.cursor(cursor_factory=RealDictCursor)
-                cur.execute(f"SELECT * from queue_main WHERE rqid = '{rqid}'")
-                data = cur.fetchone()
-                cur.close()
-                return data
-            except (Exception, DatabaseError) as error:
-                print(error)
-
-    def update_request_by_rqid(self, rqid: str, field: str, value: str):
-        """Обновление данных по rqid."""
-        with self._connect() as conn:
-            try:
-                cur = conn.cursor(cursor_factory=RealDictCursor)
-                cur.execute(f"UPDATE queue_main SET {field} = '{value}' WHERE rqid = '{rqid}'")
-                DB.conn.commit()
-                cur.close()
-            except (Exception, DatabaseError) as error:
-                print(error)
+                    print(string_param)
+                    cur.execute(string_param, kwargs)
+                    data = cur.fetchall()
+                    return data
+                except (Exception, DatabaseError) as error:
+                    print(error)
 
 
 DB = DataBase(settings.DATABASE_CONFIG)
