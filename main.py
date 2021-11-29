@@ -61,7 +61,7 @@ class ContextIncludedRoute(APIRoute):
                 )
             response: Response = await original_route_handler(request)
 
-            request_status: str = 'PENDING'
+            request_status: str = 'pending'
             request_id: str = str(uuid4())
             path: str = request.url.path
             method: str = request.method
@@ -75,7 +75,7 @@ class ContextIncludedRoute(APIRoute):
                 headers.update({header.decode('UTF-8'): value.decode('UTF-8')})
             headers = str(headers).replace("'", '"')
             # ToDo check domain
-            DB.insert_data('queue_main', request_id, path, 'SIGMA', username, request_status)
+            DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status)
             DB.insert_data('queue_requests', request_id, method, path, body, headers, '')
 
             dt: int = settings.fake_users_db[username]["dt"]
@@ -163,7 +163,7 @@ async def get_request(request_id: str, response: Response):
     if result:
         result = result[0]  # because fetch all
         response.status_code = status.HTTP_200_OK
-        if result['status'] != 'PENDING':
+        if result['status'] != 'pending':
             return {'payload': {
                 'request_id': request_id,
                 'status': result['status']
@@ -211,7 +211,7 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[str] = N
 
 @app.post('/api/v3/nexus/info')
 async def get_nexus_info():
-    # result = DB.select_data('queue_main','status',param_name='status',param_value ='PENDING')
+    # result = DB.select_data('queue_main','status',param_name='status',param_value ='pending')
     # result = DB.update_data('queue_main', field_name='status', field_value='FINISHED', param_name='request_id',
     #                         param_value='694cdccd-fde9-4440-8176-2452095cb703')
     result = {'aa':'ss'}
