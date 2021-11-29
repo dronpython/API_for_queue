@@ -9,7 +9,7 @@ from fastapi.routing import APIRoute
 from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds
 from core.settings import config, settings
 from core.connectors.DB import DB, select_done_req_with_response
-from core.connectors.LDAP import ldap
+# from core.connectors.LDAP import ldap
 from core.schemas.users import ResponseTemplateOut
 
 
@@ -47,8 +47,9 @@ class ContextIncludedRoute(APIRoute):
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail='Basic or Bearer authorize required',
                     )
-                result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
-                                          login=username, password=password)
+                # result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
+                #                           login=username, password=password)
+                result = True
                 if not result:
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -113,8 +114,9 @@ async def login_for_access_token_new(request: Request):
             detail='Can not find auth header',
         )
     username, password = credentials_answer
-    result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
-                                    password=password)
+    # result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
+    #                                 password=password)
+    result=True
     if result:
         security_string: str = username + '|' + password + '|' + '10.01.2020'
         access_token: str = await encrypt_password(security_string)
