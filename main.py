@@ -209,7 +209,7 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[str] = N
     pass
 
 
-@app.post('/api/v3/nexus/info')
+@router.post('/api/v3/nexus/info')
 async def get_nexus_info():
     # result = DB.select_data('queue_main','status',param_name='status',param_value ='pending')
     # result = DB.update_data('queue_main', field_name='status', field_value='FINISHED', param_name='request_id',
