@@ -5,7 +5,7 @@ from typing import Union
 
 select_done_req_with_response = """SELECT qm.request_id, qm.status, qr.response_body FROM queue_main qm
 JOIN queue_responses qr on qm.request_id = qr.request_id
-WHERE qm.request_id = \'{}\' AND (qm.status = 'DONE' OR qm.status = 'error')"""
+WHERE qm.request_id = \'{}\' AND (qm.status = 'done' OR qm.status = 'error')"""
 
 
 class DataBase:
