@@ -3,6 +3,7 @@ from typing import Callable, Optional
 from uuid import uuid4
 
 import uvicorn
+import json
 from fastapi import FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
 
@@ -67,9 +68,12 @@ class ContextIncludedRoute(APIRoute):
             method: str = request.method
             if await request.body():
                 body = await request.json()
-                body = str(body).replace("'", '"')
+                body = json.dumps(body)
+            elif method == 'GET':
+                body = request.query_params._dict
             else:
                 body = "{}"
+            body = json.dumps(body)
             headers: dict = {}
             for header, value in request.scope["headers"]:
                 headers.update({header.decode('UTF-8'): value.decode('UTF-8')})
@@ -84,6 +88,7 @@ class ContextIncludedRoute(APIRoute):
                 if result:
                     body = {"message": result[0].status, "response": result[0].response_body}
                     response.body = str(body).encode()
+                    response.body = json.dumps(body).encode()
                     response.headers['content-length'] = str(len(response.body))
                     return response
 
@@ -92,6 +97,7 @@ class ContextIncludedRoute(APIRoute):
             else:
                 body = {"message": "success", "id": request_id}
             response.body = str(body).encode()
+            response.body = json.dumps(body).encode()
             response.headers['content-length'] = str(len(response.body))
             return response
 
