@@ -3,6 +3,7 @@ from typing import Callable, Optional
 from uuid import uuid4
 
 import uvicorn
+import json
 from fastapi import FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
 
@@ -68,15 +69,17 @@ class ContextIncludedRoute(APIRoute):
             method: str = request.method
             if await request.body():
                 body = await request.json()
-                body = str(body).replace("'", '"')
+            elif method == 'GET':
+                body = request.query_params._dict
             else:
                 body = "{}"
+            body = str(body).replace("'", '"')
             headers: dict = {}
             for header, value in request.scope["headers"]:
                 headers.update({header.decode('UTF-8'): value.decode('UTF-8')})
             headers = str(headers).replace("'", '"')
             # ToDo check domain
-            DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status)
+            DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status, 2)
             DB.insert_data('queue_requests', request_id, method, path, body, headers, '')
 
             dt: int = settings.fake_users_db[username]["dt"]
@@ -84,7 +87,7 @@ class ContextIncludedRoute(APIRoute):
                 result = DB.universal_select(select_done_req_with_response.format(request_id))
                 if result:
                     body = {"message": result[0].status, "response": result[0].response_body}
-                    response.body = str(body).encode()
+                    response.body = json.dumps(body).encode()
                     response.headers['content-length'] = str(len(response.body))
                     return response
 
@@ -92,7 +95,7 @@ class ContextIncludedRoute(APIRoute):
                     dt -= 1
             else:
                 body = {"message": "success", "id": request_id}
-            response.body = str(body).encode()
+            response.body = json.dumps(body).encode()
             response.headers['content-length'] = str(len(response.body))
             return response
 
@@ -178,7 +181,7 @@ async def get_request(request_id: str, response: Response):
                 'data': result['timestamp'],
                 'author': result['login']
             }
-            return ResponseTemplateOut(response_status='200 zxc', message='done', payload=payload)
+            return ResponseTemplateOut(response_status='200 OK', message='done', payload=payload)
 
     else:
         response.status_code = status.HTTP_404_NOT_FOUND
@@ -211,13 +214,23 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[str] = N
     pass
 
 
-@app.post('/api/v3/nexus/info')
+@router.post('/api/v3/nexus/info')
 async def get_nexus_info():
     # result = DB.select_data('queue_main','status',param_name='status',param_value ='PENDING')
     # result = DB.update_data('queue_main', field_name='status', field_value='FINISHED', param_name='request_id',
     #                         param_value='694cdccd-fde9-4440-8176-2452095cb703')
     result = {'aa':'ss'}
     return result
+
+
+@router.get('/api/v6/bbci/project')
+async def get_bb_info():
+    return 1
+
+
+@router.get('/api/v6/jira/project')
+async def get_bb_info():
+    return 1
 
 
 app.include_router(router)
