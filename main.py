@@ -1,6 +1,7 @@
 import pathlib
 from typing import Callable, Optional
 from uuid import uuid4
+import logging
 
 import uvicorn
 import json
@@ -12,6 +13,8 @@ from core.settings import config, settings
 from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
 from core.schemas.users import ResponseTemplateOut
+
+logger = logging.getLogger()
 
 
 class ContextIncludedRoute(APIRoute):
@@ -29,21 +32,28 @@ class ContextIncludedRoute(APIRoute):
                     try:
                         token: str = headers.replace('Bearer ', '')
                         data: str = await decrypt_password(token)
+                        logger.info('GOT BEARER TOKEN')
                     except InvalidToken:
+                        logger.info('INVALID TOKEN')
                         raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Invalid token',
                         )
                     username, password, date = data.split('|')
+                    logger.info('GOT USERNAME, PASSWORD AND EXPIRE DATE')
                 elif 'Basic' in headers:
                     credentials_answer = await get_creds(request)
+                    logger.info('GET BASIC AUTH')
                     if not credentials_answer:
+                        logger.info('NOT CREDENTIALS IN HEADER')
                         raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Can not find auth header',
                         )
                     username, password = credentials_answer
+                    logger.info('GOT USERNAME AND PASSWORD')
                 else:
+                    logger.info('GOT NO AUTH')
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail='Basic or Bearer authorize required',
@@ -51,11 +61,13 @@ class ContextIncludedRoute(APIRoute):
                 result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
                                           login=username, password=password)
                 if not result:
+                    logger.info('USER NOT AUTHORIZED IN LDAP')
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail='User not authorized in ldap',
                     )
             else:
+                logger.info('GOT NO AUTH')
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail='Authorize required',
@@ -158,7 +170,7 @@ async def publish_new_request():
 
 @router.post('/bb/create_project')
 async def bb_create_project(data: dict):
-    print(1)
+    logger.info('qweqew')
     return {"a": "b"}
 
 
@@ -195,7 +207,8 @@ async def update_request(request_id: str, request: Request):
     body: dict = await request.json()
     main_table = 'queue_main'
     param_name = 'request_id'
-    result: dict = DB.update_data(main_table, field_name=body['field'], field_value=body['value'], param_name=param_name,
+    result: dict = DB.update_data(main_table, field_name=body['field'], field_value=body['value'],
+                                  param_name=param_name,
                                   param_value=request_id)
     return result
 
