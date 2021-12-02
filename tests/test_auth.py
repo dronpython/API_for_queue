@@ -1,6 +1,7 @@
 from base64 import b64encode
 from fastapi.testclient import TestClient
 from requests.auth import HTTPBasicAuth
+import os
 
 from main import app
 from core.settings import config, settings
@@ -17,7 +18,7 @@ def test_no_auth():
 
 
 def test_basic_auth():
-    creds = f"{settings.fake_users_db['CAB-SA-MLS00001']['username']}:{settings.fake_users_db['CAB-SA-MLS00001']['password']}"
+    creds = f"{settings.fake_users_db[os.environ['old_api_user']]['username']}:{settings.fake_users_db[os.environ['old_api_user']]['password']}"
     user_and_pass = b64encode(bytes(creds, encoding='utf8')).decode("ascii")
     headers = {'Authorization': 'Basic %s' % user_and_pass}
     response = client.post("/bb/create_project", json=TEST_JSON, headers=headers)
@@ -25,7 +26,7 @@ def test_basic_auth():
 
 
 def test_basic_incorrect_user():
-    creds = f"{settings.fake_users_db['CAB-SA-MLS00001']['username']}:{settings.fake_users_db['qwe']['password']}"
+    creds = f"{settings.fake_users_db[os.environ['old_api_user']]['username']}:{settings.fake_users_db['qwe']['password']}"
     user_and_pass = b64encode(bytes(creds, encoding='utf8')).decode("ascii")
     headers = {'Authorization': 'Basic %s' % user_and_pass}
     response = client.post("/bb/create_project", json=TEST_JSON, headers=headers)
