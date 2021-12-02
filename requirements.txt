@@ -30,7 +30,7 @@ PyYAML==6.0
 requests==2.26.0
 rsa==4.7.2
 semantic-version==2.8.5
-setuptools-rust==1.0.0
+setuptools-rust
 six==1.16.0
 sniffio==1.2.0
 starlette==0.16.0
