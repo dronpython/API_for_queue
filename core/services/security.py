@@ -35,8 +35,11 @@ async def get_creds(request: Request):
         creds_from_headers = request.headers['authorization']
         creds = base64.b64decode(creds_from_headers.replace('Basic ', '')).decode().split(":")
 
-        username = creds[0]
-        password = creds[1]
+        try:
+            username, password = creds
+        except ValueError:
+            return False
+
         return username, password
     else:
         return False

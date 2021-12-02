@@ -55,7 +55,7 @@ class ContextIncludedRoute(APIRoute):
                 else:
                     logger.info('GOT NO AUTH')
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
+                        status_code=status.HTTP_401_UNAUTHORIZED,
                         detail='Basic or Bearer authorize required',
                     )
                 result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
@@ -69,7 +69,7 @@ class ContextIncludedRoute(APIRoute):
             else:
                 logger.info('GOT NO AUTH')
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=status.HTTP_401_UNAUTHORIZED,
                     detail='Authorize required',
                 )
             response: Response = await original_route_handler(request)
@@ -246,5 +246,6 @@ async def get_bb_info():
 app.include_router(router)
 
 if __name__ == "__main__":
-    cwd = pathlib.Path(__file__).parent.resolve()
-    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, log_config=f"{cwd}/log.ini")
+    parent_directory = pathlib.Path(__file__).parent.resolve()
+    config_file = str(parent_directory) + config.fields.get('path').get('config_path')
+    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, log_config=config_file)

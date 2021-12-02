@@ -87,6 +87,9 @@ class Settings(BaseSettings):
             'ldap': {
                 'search_tree': os.environ['ldap_search_tree'],
                 'search_tree_ca': os.environ['ldap_search_tree_ca']
+            },
+            'path': {
+                'config': os.environ['config_path']
             }
         }
 
