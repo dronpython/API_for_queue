@@ -1,7 +1,7 @@
-from base64 import b64encode
-from fastapi.testclient import TestClient
 import pytest
 import os
+from base64 import b64encode
+from fastapi.testclient import TestClient
 
 from main import app
 from core.settings import settings

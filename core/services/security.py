@@ -1,4 +1,5 @@
 import base64
+
 from fastapi import Request
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend

@@ -1,6 +1,6 @@
 import logging
-from logging import LogRecord
 import re
+from logging import LogRecord
 from typing import List
 
 

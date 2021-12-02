@@ -1,5 +1,6 @@
 import logging
 from typing import Union
+
 from psycopg2 import connect, DatabaseError, sql
 from psycopg2.extras import NamedTupleCursor, RealDictCursor
 
