@@ -136,7 +136,7 @@ async def login_for_access_token_new(request: Request):
     if result:
         security_string: str = username + '|' + password + '|' + '10.01.2020'
         access_token: str = await encrypt_password(security_string)
-        return {'access_token': access_token}
+        return {'access_token': f'Bearer: {access_token}'}
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -174,7 +174,7 @@ async def bb_create_project(data: dict):
     return {"a": "b"}
 
 
-@app.get('/queue/request/{request_id}', response_model=ResponseTemplateOut)
+@router.get('/queue/request/{request_id}', response_model=ResponseTemplateOut)
 async def get_request(request_id: str, response: Response):
     """Получить информацию о запросе по request_uuid"""
     result: dict = DB.select_data('queue_main', 'status', param_name='request_id', param_value=request_id)
@@ -201,7 +201,7 @@ async def get_request(request_id: str, response: Response):
         return ResponseTemplateOut(response_status='200 OK', message='zxc', payload='unluck')
 
 
-@app.put('/queue/request/{request_id}')
+@router.put('/queue/request/{request_id}')
 async def update_request(request_id: str, request: Request):
     """Обновить информацию о запросе по request_id"""
     body: dict = await request.json()
@@ -213,7 +213,7 @@ async def update_request(request_id: str, request: Request):
     return result
 
 
-@app.get('/queue/info')
+@router.get('/queue/info')
 async def get_queue_info(status: Optional[str] = None, period: Optional[int] = None, endpoint: Optional[str] = None,
                          directory: Optional[str] = None):
     """Получить информацию об очереди"""
@@ -221,7 +221,7 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[int] = N
     return result
 
 
-@app.get('/queue/processing_info')
+@router.get('/queue/processing_info')
 async def get_queue_info(status: Optional[str] = None, period: Optional[str] = None, endpoint: Optional[str] = None,
                          directory: Optional[str] = None):
     """Получить информацию об очереди"""
