@@ -174,7 +174,7 @@ async def bb_create_project(data: dict):
     return {"a": "b"}
 
 
-@router.get('/queue/request/{request_id}', response_model=ResponseTemplateOut)
+@app.get('/queue/request/{request_id}', response_model=ResponseTemplateOut)
 async def get_request(request_id: str, response: Response):
     """Получить информацию о запросе по request_uuid"""
     result: dict = DB.select_data('queue_main', 'status', param_name='request_id', param_value=request_id)
@@ -201,7 +201,7 @@ async def get_request(request_id: str, response: Response):
         return ResponseTemplateOut(response_status='200 OK', message='zxc', payload='unluck')
 
 
-@router.put('/queue/request/{request_id}')
+@app.put('/queue/request/{request_id}')
 async def update_request(request_id: str, request: Request):
     """Обновить информацию о запросе по request_id"""
     body: dict = await request.json()
@@ -213,7 +213,7 @@ async def update_request(request_id: str, request: Request):
     return result
 
 
-@router.get('/queue/info')
+@app.get('/queue/info')
 async def get_queue_info(status: Optional[str] = None, period: Optional[int] = None, endpoint: Optional[str] = None,
                          directory: Optional[str] = None):
     """Получить информацию об очереди"""
@@ -221,11 +221,18 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[int] = N
     return result
 
 
-@router.get('/queue/processing_info')
+@app.get('/queue/processing_info')
 async def get_queue_info(status: Optional[str] = None, period: Optional[str] = None, endpoint: Optional[str] = None,
                          directory: Optional[str] = None):
     """Получить информацию об очереди"""
     pass
+
+
+@app.get('/queue/get_requests_status')
+async def get_queue_info(status: Optional[str]):
+    """Получить информацию об очереди"""
+    result: dict = DB.get_queue_statistics(status=status)
+    return result
 
 
 @router.post('/api/v3/nexus/info')

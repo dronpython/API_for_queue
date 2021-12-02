@@ -93,11 +93,11 @@ class DataBase:
                             f"SELECT * FROM queue_main WHERE timestamp >= NOW()::timestamp - INTERVAL '%(period)s minutes'", )
                     else:
                         paramlist.append(f"SELECT * FROM queue_main WHERE timestamp < NOW()::timestamp")
-                    if kwargs['status']:
+                    if kwargs.get('status'):
                         paramlist.append(f"and status = %(status)s")
-                    if kwargs['directory']:
+                    if kwargs.get('directory'):
                         paramlist.append(f"and endpoint ~ %(directory)s")
-                    if kwargs['endpoint']:
+                    if kwargs.get('endpoint'):
                         paramlist.append(f"and endpoint = %(endpoint)s")
                     string_param = ' '.join(paramlist)
 
