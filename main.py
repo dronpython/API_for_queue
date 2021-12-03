@@ -262,4 +262,4 @@ app.include_router(router)
 if __name__ == "__main__":
     parent_directory = pathlib.Path(__file__).parent.resolve()
     config_file = str(parent_directory) + config.fields.get('path').get('config')
-    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True)
+    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, log_config=config_file)
