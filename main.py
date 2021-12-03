@@ -27,11 +27,12 @@ class ContextIncludedRoute(APIRoute):
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request):
-            headers: str = request.headers.get('authorization')
-            if headers:
-                if 'Bearer' in headers:
+            auth_header: str = request.headers.get('authorization')
+            if auth_header:
+                headers_dict = dict(request.headers)
+                if 'Bearer' in auth_header:
                     try:
-                        token: str = headers.replace('Bearer ', '')
+                        token: str = auth_header.replace('Bearer ', '')
                         data: str = await decrypt_password(token)
                         logger.info('GOT BEARER TOKEN')
                     except InvalidToken:
@@ -41,9 +42,8 @@ class ContextIncludedRoute(APIRoute):
                             detail='Invalid token',
                         )
                     username, password, date = data.split('|')
-                    old_api_auth_header = await old_api_token(username,password)
                     logger.info('GOT USERNAME, PASSWORD AND EXPIRE DATE')
-                elif 'Basic' in headers:
+                elif 'Basic' in auth_header:
                     credentials_answer = await get_creds(request)
                     logger.info('GET BASIC AUTH')
                     if not credentials_answer:
@@ -91,10 +91,9 @@ class ContextIncludedRoute(APIRoute):
                 body = "{}"
             body = json.dumps(body)
 
-            headers: dict = {}
-            for header, value in request.scope["headers"]:
-                headers.update({header.decode('UTF-8'): value.decode('UTF-8')})
-            headers = str(headers).replace("'", '"')
+            old_api_auth_header = await old_api_token(username, password)
+            headers_dict['authorization'] = old_api_auth_header
+            headers = str(headers_dict).replace("'", '"')
 
             # ToDo check domain
             DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status)
@@ -263,4 +262,4 @@ app.include_router(router)
 if __name__ == "__main__":
     parent_directory = pathlib.Path(__file__).parent.resolve()
     config_file = str(parent_directory) + config.fields.get('path').get('config')
-    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, log_config=config_file)
+    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True)
