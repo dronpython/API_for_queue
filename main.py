@@ -42,6 +42,12 @@ class ContextIncludedRoute(APIRoute):
                             detail='Invalid token',
                         )
                     username, password, date = data.split('|')
+
+                    # Для работы со старой API
+                    old_api_auth_header = await old_api_token(username, password)
+                    headers_dict.pop('authorization', None)
+                    headers_dict['token'] = old_api_auth_header
+
                     logger.info('GOT USERNAME, PASSWORD AND EXPIRE DATE')
                 elif 'Basic' in auth_header:
                     credentials_answer = await get_creds(request)
@@ -89,9 +95,6 @@ class ContextIncludedRoute(APIRoute):
                 body = {}
             body = json.dumps(body)
 
-            # Для работы со старой API
-            old_api_auth_header = await old_api_token(username, password)
-            headers_dict['token'] = old_api_auth_header
             headers = str(headers_dict).replace("'", '"')
 
             # ToDo check domain
