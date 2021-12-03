@@ -87,6 +87,7 @@ class ContextIncludedRoute(APIRoute):
             else:
                 body = {}
 
+            # Для работы со старой API
             old_api_auth_token = await old_api_token(username, password)
             body['token'] = old_api_auth_token
             body = json.dumps(body)
@@ -98,11 +99,11 @@ class ContextIncludedRoute(APIRoute):
             DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status)
             DB.insert_data('queue_requests', request_id, method, path, body, headers, '')
 
-            dt: int = settings.fake_users_db[username]["dt"]
+            dt: int = settings.fake_users_db[username]['dt']
             while dt != 0:
                 result = DB.universal_select(select_done_req_with_response.format(request_id))
                 if result:
-                    body = {"message": result[0].status, "response": result[0].response_body}
+                    body = {'message': result[0].status, 'response': result[0].response_body}
                     response.body = str(body).encode()
                     response.body = json.dumps(body).encode()
                     response.headers['content-length'] = str(len(response.body))
@@ -111,7 +112,7 @@ class ContextIncludedRoute(APIRoute):
                 else:
                     dt -= 1
             else:
-                body = {"message": "success", "id": request_id}
+                body = {'message': 'success', 'id': request_id}
 
             response.body = str(body).encode()
             response.body = json.dumps(body).encode()
@@ -257,7 +258,7 @@ async def get_bb_info():
 
 app.include_router(router)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parent_directory = pathlib.Path(__file__).parent.resolve()
     config_file = str(parent_directory) + config.fields.get('path').get('config')
-    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, log_config=config_file)
+    uvicorn.run('main:app', host='0.0.0.0', port=8000, reload=True, log_config=config_file)
