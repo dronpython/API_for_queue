@@ -1,4 +1,6 @@
 import pathlib
+import json
+import logging
 from typing import Callable, Optional
 from uuid import uuid4
 
@@ -7,11 +9,13 @@ import json
 from fastapi import FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
 
-from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds
+from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds, old_api_token
 from core.settings import config, settings
 from core.connectors.DB import DB, select_done_req_with_response
-# from core.connectors.LDAP import ldap
+#from core.connectors.LDAP import ldap
 from core.schemas.users import ResponseTemplateOut
+
+logger = logging.getLogger()
 
 
 class ContextIncludedRoute(APIRoute):
@@ -29,36 +33,46 @@ class ContextIncludedRoute(APIRoute):
                     try:
                         token: str = headers.replace('Bearer ', '')
                         data: str = await decrypt_password(token)
+                        logger.info('GOT BEARER TOKEN')
                     except InvalidToken:
+                        logger.info('INVALID TOKEN')
                         raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Invalid token',
                         )
                     username, password, date = data.split('|')
+                    old_api_auth_header = await old_api_token(username,password)
+                    logger.info('GOT USERNAME, PASSWORD AND EXPIRE DATE')
                 elif 'Basic' in headers:
                     credentials_answer = await get_creds(request)
+                    logger.info('GET BASIC AUTH')
                     if not credentials_answer:
+                        logger.info('NOT CREDENTIALS IN HEADER')
                         raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Can not find auth header',
                         )
                     username, password = credentials_answer
+                    logger.info('GOT USERNAME AND PASSWORD')
                 else:
+                    logger.info('GOT NO AUTH')
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
+                        status_code=status.HTTP_401_UNAUTHORIZED,
                         detail='Basic or Bearer authorize required',
                     )
                 # result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
                 #                           login=username, password=password)
                 result = True
                 if not result:
+                    logger.info('USER NOT AUTHORIZED IN LDAP')
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail='User not authorized in ldap',
                     )
             else:
+                logger.info('GOT NO AUTH')
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=status.HTTP_401_UNAUTHORIZED,
                     detail='Authorize required',
                 )
             response: Response = await original_route_handler(request)
@@ -67,19 +81,23 @@ class ContextIncludedRoute(APIRoute):
             request_id: str = str(uuid4())
             path: str = request.url.path
             method: str = request.method
+
             if await request.body():
                 body = await request.json()
+                body = json.dumps(body)
             elif method == 'GET':
                 body = request.query_params._dict
             else:
                 body = "{}"
-            body = str(body).replace("'", '"')
+            body = json.dumps(body)
+
             headers: dict = {}
             for header, value in request.scope["headers"]:
                 headers.update({header.decode('UTF-8'): value.decode('UTF-8')})
             headers = str(headers).replace("'", '"')
+
             # ToDo check domain
-            DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status, 2)
+            DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status)
             DB.insert_data('queue_requests', request_id, method, path, body, headers, '')
 
             dt: int = settings.fake_users_db[username]["dt"]
@@ -87,6 +105,7 @@ class ContextIncludedRoute(APIRoute):
                 result = DB.universal_select(select_done_req_with_response.format(request_id))
                 if result:
                     body = {"message": result[0].status, "response": result[0].response_body}
+                    response.body = str(body).encode()
                     response.body = json.dumps(body).encode()
                     response.headers['content-length'] = str(len(response.body))
                     return response
@@ -95,6 +114,8 @@ class ContextIncludedRoute(APIRoute):
                     dt -= 1
             else:
                 body = {"message": "success", "id": request_id}
+
+            response.body = str(body).encode()
             response.body = json.dumps(body).encode()
             response.headers['content-length'] = str(len(response.body))
             return response
@@ -119,11 +140,11 @@ async def login_for_access_token_new(request: Request):
     username, password = credentials_answer
     # result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
     #                                 password=password)
-    result=True
+    result = True
     if result:
         security_string: str = username + '|' + password + '|' + '10.01.2020'
         access_token: str = await encrypt_password(security_string)
-        return {'access_token': access_token}
+        return {'access_token': f'Bearer: {access_token}'}
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -157,7 +178,7 @@ async def publish_new_request():
 
 @router.post('/bb/create_project')
 async def bb_create_project(data: dict):
-    print(1)
+    logger.info('qweqew')
     return {"a": "b"}
 
 
@@ -194,7 +215,8 @@ async def update_request(request_id: str, request: Request):
     body: dict = await request.json()
     main_table = 'queue_main'
     param_name = 'request_id'
-    result: dict = DB.update_data(main_table, field_name=body['field'], field_value=body['value'], param_name=param_name,
+    result: dict = DB.update_data(main_table, field_name=body['field'], field_value=body['value'],
+                                  param_name=param_name,
                                   param_value=request_id)
     return result
 
@@ -214,13 +236,16 @@ async def get_queue_info(status: Optional[str] = None, period: Optional[str] = N
     pass
 
 
+@app.get('/queue/get_requests_status')
+async def get_queue_info(status: Optional[str]):
+    """Получить информацию об очереди"""
+    result: dict = DB.get_queue_statistics(status=status)
+    return result
+
+
 @router.post('/api/v3/nexus/info')
 async def get_nexus_info():
-    # result = DB.select_data('queue_main','status',param_name='status',param_value ='PENDING')
-    # result = DB.update_data('queue_main', field_name='status', field_value='FINISHED', param_name='request_id',
-    #                         param_value='694cdccd-fde9-4440-8176-2452095cb703')
-    result = {'aa':'ss'}
-    return result
+    return 1
 
 
 @router.get('/api/v6/bbci/project')
@@ -236,5 +261,6 @@ async def get_bb_info():
 app.include_router(router)
 
 if __name__ == "__main__":
-    cwd = pathlib.Path(__file__).parent.resolve()
-    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, log_config=f"{cwd}/log.ini")
+    parent_directory = pathlib.Path(__file__).parent.resolve()
+    config_file = str(parent_directory) + config.fields.get('path').get('config')
+    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, log_config=config_file)

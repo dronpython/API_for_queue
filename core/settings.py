@@ -1,30 +1,14 @@
-from typing import Set
 import os
 
 from pydantic import (
-    BaseModel,
     BaseSettings,
-    PyObject,
-    RedisDsn,
-    PostgresDsn,
-    Field,
 )
 
 
-class SubModel(BaseModel):
-    foo = 'bar'
-    apple = 1
-
-
 class Settings(BaseSettings):
-    auth_key: str = 'qe'
-    # api_key: str = Field(..., env='my_api_key')
-    api_key: str = 'qwe'
+    auth_key: str = 'unusable_key'
+    api_key: str = 'sw.api'
 
-    redis_dsn: RedisDsn = 'redis://user:pass@localhost:6379/1'
-    pg_dsn: PostgresDsn = 'postgres://user:pass@localhost:5432/foobar'
-
-    special_function: PyObject = 'math.cos'
     DATABASE_CONFIG = {
         'host': os.environ['db_host'],
         'port': os.environ['db_port'],
@@ -52,13 +36,6 @@ class Settings(BaseSettings):
             'dt': 100
         }
     }
-    # to override domains:
-    # export my_prefix_domains='['foo.com', 'bar.com']'
-    domains: Set[str] = set()
-
-    # to override more_settings:
-    # export my_prefix_more_settings='{'foo': 'x', 'apple': 1}'
-    more_settings: SubModel = SubModel()
 
     class Config:
         env_prefix = '.env'  # defaults to no prefix, i.e. ''
@@ -87,6 +64,9 @@ class Settings(BaseSettings):
             'ldap': {
                 'search_tree': os.environ['ldap_search_tree'],
                 'search_tree_ca': os.environ['ldap_search_tree_ca']
+            },
+            'path': {
+                'config': os.environ['config_path']
             }
         }
 

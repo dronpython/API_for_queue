@@ -26,12 +26,16 @@ pyparsing
 pytest==6.2.5
 python-jose==3.3.0
 python-multipart==0.0.5
+PyYAML==6.0
 requests==2.26.0
 rsa==4.7.2
+semantic-version==2.8.5
+setuptools-rust
 six==1.16.0
 sniffio==1.2.0
 starlette==0.16.0
 toml==0.10.2
+tomli==1.2.2
 typing_extensions==4.0.0
 urllib3==1.26.7
 uvicorn==0.15.0

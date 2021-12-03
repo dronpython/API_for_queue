@@ -1,15 +1,14 @@
+import logging
+
 from ldap3 import (
     Server,
     Connection,
-    SIMPLE,
-    SYNC,
-    ASYNC,
-    SUBTREE,
-    ALL,
     RESTARTABLE
 )
 
 from core.settings import config
+
+logger = logging.getLogger()
 
 
 class LDAP:
@@ -41,22 +40,22 @@ class LDAP:
                 client_strategy=RESTARTABLE,
             )
             if self.lconn.bind():
-                print("-= libldap: __init__: connected to " + str(server))
-                print(
-                    f">> connectors.libldap.LDAP.__connect >> Successfully connected to LDAP >> domain = {domain}; server = {str(server)}"
+                logger.info("-= libldap: __init__: connected to " + str(server))
+                logger.info(
+                    f"Successfully connected to LDAP to domain = {domain}; server = {str(server)}"
                 )
             else:
-                print(
-                    f">> connectors.libldap.LDAP.__connect >> [!] Failed to connect to LDAP >> domain = {domain}; server = {str(server)}"
+                logger.info(
+                    f"[!] Failed to connect to LDAP to domain = {domain}; server = {str(server)}"
                 )
-                print("!!!LDAP: INITIALIZE FAIL!!!! ")
+                logger.info("LDAP: INITIALIZE FAIL")
         except Exception as EE:
-            print("!!!LDAP: INITIALIZE FAIL!!!! " + str(EE))
-            print(
-                f">> connectors.libldap.LDAP.__connect >> [!] Exception occured while connecting to LDAP >> domain = {domain}; server = {str(server)}"
+            logger.info("LDAP: INITIALIZE FAIL " + str(EE))
+            logger.info(
+                f"Exception occured while connecting to LDAP to domain = {domain}; server = {str(server)}"
             )
-            print(
-                f">> connectors.libldap.LDAP.__connect >> [!] Exception occured while connecting to LDAP >> domain = {domain}; server = {str(server)}; Error = {str(EE)}"
+            logger.info(
+                f"Exception occured while connecting to LDAP to domain = {domain}; server = {str(server)}; Error = {str(EE)}"
             )
 
         self.attributes = [
@@ -94,8 +93,8 @@ class LDAP:
 
     def __reconnect(self):
         if not self.lconn:
-            print(f">> connectors.libldap.LDAP.__reconnect >> ")
-            print("!!!LDAP: INIT RECONNECT!!!! ")
+            logger.info(f"RECONNECT")
+            logger.info("LDAP: INIT RECONNECT")
             self.__connect(self.server, self.domain, self.login, self.password)
 
     def _conn(self):
@@ -103,7 +102,7 @@ class LDAP:
             self.__reconnect()
         if not self.lconn:
             raise ConnectionError(
-                f"[!] Failed to connect to LDAP >> domain = {self.domain}; server = {str(self.server)} >> try again later"
+                f"[!] Failed to connect to LDAP to domain = {self.domain}; server = {str(self.server)}.Try again later"
             )
         return self.lconn
 
@@ -116,26 +115,26 @@ class LDAP:
                 authentication="NTLM",
             )
             if lconn.bind():
-                print(f"-= libldap: _check_auth: success; user = {login}")
-                print(
-                    f">> connectors.libldap.LDAP._check_auth >> Successfully connected to LDAP >> domain = {domain}; server = {str(server)}; user = {login}"
+                logger.info(f"check_auth: success; user = {login}")
+                logger.info(
+                    f"Successfully connected to LDAP to domain = {domain}; server = {str(server)}; user = {login}"
                 )
                 return True
             else:
-                print(
-                    f">> connectors.libldap.LDAP._check_auth >> [!] Failed to connect to LDAP >> domain = {domain}; server = {str(server)}; user = {login}"
+                logger.info(
+                    f"Failed to connect to LDAP to domain = {domain}; server = {str(server)}; user = {login}"
                 )
-                print(f"-= libldap: _check_auth: failed; user = {login}")
+                logger.info(f"check_auth: failed; user = {login}")
                 return False
         except Exception as EE:
-            print(
-                f"-= libldap: _check_auth: Exception; user = {login}; Error = {str(EE)}"
+            logger.info(
+                f"check_auth: Exception; user = {login}; Error = {str(EE)}"
             )
-            print(
-                f">> connectors.libldap.LDAP._check_auth >> [!] Exception occured while connecting to LDAP >> domain = {domain}; server = {str(server)}"
+            logger.info(
+                f"check_auth: Exception occured while connecting to LDAP to domain = {domain}; server = {str(server)}"
             )
-            print(
-                f">> connectors.libldap.LDAP._check_auth >> [!] Exception occured while connecting to LDAP >> domain = {domain}; server = {str(server)}; Error = {str(EE)}"
+            logger.info(
+                f"check_auth: Exception occured while connecting to LDAP to domain = {domain}; server = {str(server)}; Error = {str(EE)}"
             )
             return False
 
