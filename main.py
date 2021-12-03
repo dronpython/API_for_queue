@@ -2,6 +2,7 @@ import pathlib
 import logging
 from typing import Callable, Optional
 from uuid import uuid4
+import re
 
 import uvicorn
 import json
@@ -31,7 +32,7 @@ class ContextIncludedRoute(APIRoute):
                 headers_dict = dict(request.headers)
                 if 'Bearer' in auth_header:
                     try:
-                        token: str = auth_header.replace('Bearer ', '')
+                        token: str = re.sub('Bearer[:]? ', '', auth_header)
                         logger.info(f'GOT TOKEN {token}')
                         data: str = await decrypt_password(token)
                         logger.info('GOT BEARER TOKEN')
