@@ -8,10 +8,10 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
 
-from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds
+from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds, old_api_token
 from core.settings import config, settings
 from core.connectors.DB import DB, select_done_req_with_response
-from core.connectors.LDAP import ldap
+#from core.connectors.LDAP import ldap
 from core.schemas.users import ResponseTemplateOut
 
 logger = logging.getLogger()
@@ -40,6 +40,7 @@ class ContextIncludedRoute(APIRoute):
                             detail='Invalid token',
                         )
                     username, password, date = data.split('|')
+                    old_api_auth_header = await old_api_token(username,password)
                     logger.info('GOT USERNAME, PASSWORD AND EXPIRE DATE')
                 elif 'Basic' in headers:
                     credentials_answer = await get_creds(request)
@@ -58,8 +59,9 @@ class ContextIncludedRoute(APIRoute):
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail='Basic or Bearer authorize required',
                     )
-                result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
-                                          login=username, password=password)
+                # result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
+                #                           login=username, password=password)
+                result = True
                 if not result:
                     logger.info('USER NOT AUTHORIZED IN LDAP')
                     raise HTTPException(
@@ -78,6 +80,7 @@ class ContextIncludedRoute(APIRoute):
             request_id: str = str(uuid4())
             path: str = request.url.path
             method: str = request.method
+
             if await request.body():
                 body = await request.json()
                 body = json.dumps(body)
@@ -86,10 +89,12 @@ class ContextIncludedRoute(APIRoute):
             else:
                 body = "{}"
             body = json.dumps(body)
+
             headers: dict = {}
             for header, value in request.scope["headers"]:
                 headers.update({header.decode('UTF-8'): value.decode('UTF-8')})
             headers = str(headers).replace("'", '"')
+
             # ToDo check domain
             DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status)
             DB.insert_data('queue_requests', request_id, method, path, body, headers, '')
@@ -131,8 +136,9 @@ async def login_for_access_token_new(request: Request):
             detail='Can not find auth header',
         )
     username, password = credentials_answer
-    result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
-                                    password=password)
+    # result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
+    #                                 password=password)
+    result = True
     if result:
         security_string: str = username + '|' + password + '|' + '10.01.2020'
         access_token: str = await encrypt_password(security_string)
