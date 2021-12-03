@@ -1,5 +1,4 @@
 import pathlib
-import json
 import logging
 from typing import Callable, Optional
 from uuid import uuid4
@@ -12,7 +11,7 @@ from fastapi.routing import APIRoute
 from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds, old_api_token
 from core.settings import config, settings
 from core.connectors.DB import DB, select_done_req_with_response
-#from core.connectors.LDAP import ldap
+from core.connectors.LDAP import ldap
 from core.schemas.users import ResponseTemplateOut
 
 logger = logging.getLogger()
@@ -60,9 +59,8 @@ class ContextIncludedRoute(APIRoute):
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail='Basic or Bearer authorize required',
                     )
-                # result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
-                #                           login=username, password=password)
-                result = True
+                result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
+                                          login=username, password=password)
                 if not result:
                     logger.info('USER NOT AUTHORIZED IN LDAP')
                     raise HTTPException(
@@ -137,9 +135,8 @@ async def login_for_access_token_new(request: Request):
             detail='Can not find auth header',
         )
     username, password = credentials_answer
-    # result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
-    #                                 password=password)
-    result = True
+    result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
+                                    password=password)
     if result:
         security_string: str = username + '|' + password + '|' + '10.01.2020'
         access_token: str = await encrypt_password(security_string)
