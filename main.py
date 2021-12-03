@@ -33,7 +33,6 @@ class ContextIncludedRoute(APIRoute):
                 if 'Bearer' in auth_header:
                     try:
                         token: str = re.sub('Bearer[:]? ', '', auth_header)
-                        logger.info(f'GOT TOKEN {token}')
                         data: str = await decrypt_password(token)
                         logger.info('GOT BEARER TOKEN')
                     except InvalidToken:
