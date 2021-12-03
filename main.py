@@ -91,7 +91,7 @@ class ContextIncludedRoute(APIRoute):
 
             # Для работы со старой API
             old_api_auth_header = await old_api_token(username, password)
-            headers_dict['authorization'] = old_api_auth_header
+            headers_dict['token'] = old_api_auth_header
             headers = str(headers_dict).replace("'", '"')
 
             # ToDo check domain
