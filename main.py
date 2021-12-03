@@ -82,15 +82,16 @@ class ContextIncludedRoute(APIRoute):
 
             if await request.body():
                 body = await request.json()
-                body = json.dumps(body)
             elif method == 'GET':
-                body = request.query_params._dict
+                body = dict(request.query_params)
             else:
-                body = "{}"
+                body = {}
+
+            old_api_auth_token = await old_api_token(username, password)
+            body['token'] = old_api_auth_token
             body = json.dumps(body)
 
-            old_api_auth_header = await old_api_token(username, password)
-            headers_dict['authorization'] = old_api_auth_header
+            headers_dict.pop('authorization', None)
             headers = str(headers_dict).replace("'", '"')
 
             # ToDo check domain
