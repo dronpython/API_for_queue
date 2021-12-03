@@ -87,13 +87,11 @@ class ContextIncludedRoute(APIRoute):
                 body = dict(request.query_params)
             else:
                 body = {}
-
-            # Для работы со старой API
-            old_api_auth_token = await old_api_token(username, password)
-            body['token'] = old_api_auth_token
             body = json.dumps(body)
 
-            headers_dict.pop('authorization', None)
+            # Для работы со старой API
+            old_api_auth_header = await old_api_token(username, password)
+            headers_dict['authorization'] = old_api_auth_header
             headers = str(headers_dict).replace("'", '"')
 
             # ToDo check domain
