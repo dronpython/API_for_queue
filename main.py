@@ -15,7 +15,9 @@ from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
 from core.schemas.users import ResponseTemplateOut
 
-logger = logging.getLogger()
+extra = {"source": "swapi"}
+logger = logging.getLogger(__name__)
+logger = logging.LoggerAdapter(logger, extra)
 
 
 class ContextIncludedRoute(APIRoute):
