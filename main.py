@@ -88,7 +88,7 @@ class ContextIncludedRoute(APIRoute):
             request_id: str = str(uuid4())
             path: str = request.url.path
             method: str = request.method
-
+            log_info = f'Request_id: {request_id}. '
             if await request.body():
                 body = await request.json()
             elif method == 'GET':
@@ -100,13 +100,17 @@ class ContextIncludedRoute(APIRoute):
             headers = str(headers_dict).replace("'", '"')
 
             # ToDo check domain
+            logger.info(f'{log_info} Got request with params: endpoint: {path}, body: {body}, '
+                        f'headers: {headers}, username: {username}, status: {request_status}, method: {method}')
             DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status)
             DB.insert_data('queue_requests', request_id, method, path, body, headers, '')
 
             dt: int = settings.fake_users_db[username]['dt']
+            logger.info(f'{log_info} User dt is: {dt}. Waiting for response..')
             while dt != 0:
                 result = DB.universal_select(select_done_req_with_response.format(request_id))
                 if result:
+                    logger.info(f'{log_info} Got response. Status: {result[0].status}. Body: {result[0].response_body}')
                     body = {'message': result[0].status, 'response': result[0].response_body}
                     response.body = str(body).encode()
                     response.body = json.dumps(body).encode()
@@ -116,6 +120,7 @@ class ContextIncludedRoute(APIRoute):
                 else:
                     dt -= 1
             else:
+                logger.info(f'{log_info} Response not found. Return id: {request_id}')
                 body = {'message': 'success', 'id': request_id}
 
             response.body = str(body).encode()
