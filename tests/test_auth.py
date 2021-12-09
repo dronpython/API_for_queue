@@ -26,7 +26,7 @@ def get_token(user, user_password):
     creds = f"{user}:{user_password}"
     user_and_pass = b64encode(bytes(creds, encoding='utf8')).decode("ascii")
     headers = {'Authorization': 'Basic %s' % user_and_pass}
-    response = client.post("/token_new/", json=TEST_JSON, headers=headers)
+    response = client.post("/token/", json=TEST_JSON, headers=headers)
     return response.json()
 
 
@@ -65,12 +65,12 @@ def test_get_token_incorrect_user():
     creds = f"random_user:random_password"
     user_and_pass = b64encode(bytes(creds, encoding='utf8')).decode("ascii")
     headers = {'Authorization': 'Basic %s' % user_and_pass}
-    response = client.post("/token_new/", json=TEST_JSON, headers=headers)
+    response = client.post("/token/", json=TEST_JSON, headers=headers)
     assert response.status_code == 400
 
 
 def test_get_token_no_header():
-    response = client.post("/token_new/", json=TEST_JSON)
+    response = client.post("/token/", json=TEST_JSON)
     assert response.status_code == 401
 
 

@@ -135,7 +135,7 @@ app = FastAPI()
 router = APIRouter(route_class=ContextIncludedRoute)
 
 
-@app.post('/token_new/')
+@app.post('/token/')
 async def login_for_access_token_new(request: Request):
     """Получить токен новый
     """
@@ -157,36 +157,6 @@ async def login_for_access_token_new(request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Incorrect username or password',
         )
-
-
-@router.post('/endpoint/')
-async def publish_new_request():
-    """Медленный метод для тестов"""
-    for i in range(10000):
-        for j in range(20000):
-            b = i + j
-    return {'s': 'information'}
-
-
-@router.post('/bb/zxc/')
-async def publish_new_request():
-    """Быстрый метод для тестов"""
-    return {'s': 'information'}
-
-
-@router.post('/bb/qwe/')
-async def publish_new_request():
-    """Медленный метод для тестов"""
-    for i in range(10000):
-        for j in range(20000):
-            b = i + j
-    return {'s': 'information'}
-
-
-@router.post('/bb/create_project')
-async def bb_create_project(data: dict):
-    logger.info('qweqew')
-    return {"a": "b"}
 
 
 @app.get('/queue/request/{request_id}', response_model=ResponseTemplateOut)
@@ -250,20 +220,10 @@ async def get_queue_info(status: Optional[str]):
     return result
 
 
-@router.post('/api/v3/nexus/info')
-async def get_nexus_info():
+# Метод перехватывающий любой запрос, кроме объявленных выше
+@router.api_route("/{path_name:path}", methods=["GET", "POST"])
+async def catch_all(request: Request, path_name: str):
     return 1
-
-
-@router.get('/api/v6/bbci/project')
-async def get_bb_info():
-    return 1
-
-
-@router.get('/api/v6/jira/project')
-async def get_bb_info():
-    return 1
-
 
 app.include_router(router)
 
