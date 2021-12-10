@@ -48,7 +48,9 @@ class Settings(BaseSettings):
             'path': {
                 'config': os.environ['config_path']
             },
-            'default_dt': os.environ['default_dt']
+            'default_dt': {
+                'env': os.environ['default_dt']
+            }
         }
 
 

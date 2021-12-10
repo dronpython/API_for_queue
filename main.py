@@ -109,7 +109,7 @@ class ContextIncludedRoute(APIRoute):
             acl_data = DB.select_data('acl', 'user', username)
             dt: Optional[int] = acl_data[0].get('dt')
             if dt is None:
-                dt = config.fields.get('default_dt')
+                dt = config.fields.get('default_dt').get('env')
             logger.info(f'{log_info} User dt is: {dt}. Waiting for response..')
             while dt != 0:
                 result = DB.universal_select(select_done_req_with_response.format(request_id))
