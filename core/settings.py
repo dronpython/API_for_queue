@@ -48,7 +48,7 @@ class Settings(BaseSettings):
             'path': {
                 'config': os.environ['config_path']
             },
-            'default_dt': os.environ['default_dt'],
+            'default_dt': os.environ['random_param'],
             'new_param': os.environ['random_param']
         }
 
