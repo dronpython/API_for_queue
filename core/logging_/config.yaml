@@ -25,4 +25,4 @@ handlers:
 root:
   handlers:
     - socket
-  level: INFO
+  level: DEBUG
