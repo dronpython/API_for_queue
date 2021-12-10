@@ -115,6 +115,7 @@ class ContextIncludedRoute(APIRoute):
                 result = DB.universal_select(select_done_req_with_response.format(request_id))
                 logger.info(f'got result {result}')
                 if result:
+                    logger.info(f'Come to result with {result}')
                     logger.info(f'{log_info} Got response. Status: {result[0].status}. Body: {result[0].response_body}')
                     body = {'message': result[0].status, 'response': result[0].response_body}
                     response.body = str(body).encode()
