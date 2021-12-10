@@ -1,10 +1,9 @@
 import pytest
-import os
 from base64 import b64encode
 from fastapi.testclient import TestClient
 
 from main import app
-from core.settings import settings
+from core.settings import config
 
 client = TestClient(app)
 
@@ -13,12 +12,12 @@ TEST_JSON = {"user": "asd"}
 
 @pytest.fixture
 def user():
-    return settings.fake_users_db[os.environ['old_api_user']]['username']
+    return config.fields.get('cred').get('domain_auth').get('login')
 
 
 @pytest.fixture
 def user_password():
-    return settings.fake_users_db[os.environ['old_api_user']]['password']
+    return config.fields.get('cred').get('domain_auth').get('password')
 
 
 @pytest.fixture

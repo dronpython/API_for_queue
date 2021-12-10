@@ -16,26 +16,6 @@ class Settings(BaseSettings):
         'user': os.environ['db_user'],
         'password': os.environ['db_password']
     }
-    fake_users_db = {
-        'qwe': {
-            'username': 'qwe',
-            'full_name': 'John Doe',
-            'email': 'johndoe@example.com',
-            'hashed_password': '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
-            'disabled': False,
-            'password': '123',
-            'dt': 10000,
-        },
-        os.environ['old_api_user']: {
-            'username': os.environ['old_api_user'],
-            'full_name': 'John Doe',
-            'email': 'johndoe@example.com',
-            'hashed_password': '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
-            'disabled': False,
-            'password': os.environ['old_api_password'],
-            'dt': 100
-        }
-    }
 
     class Config:
         env_prefix = '.env'  # defaults to no prefix, i.e. ''
@@ -67,7 +47,8 @@ class Settings(BaseSettings):
             },
             'path': {
                 'config': os.environ['config_path']
-            }
+            },
+            'default_dt': os.environ['default_dt_qservice']
         }
 
 

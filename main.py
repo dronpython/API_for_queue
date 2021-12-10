@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
 
 from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds, old_api_token
-from core.settings import config, settings
+from core.settings import config
 from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
 from core.schemas.users import ResponseTemplateOut
@@ -18,6 +18,7 @@ from core.schemas.users import ResponseTemplateOut
 extra = {"source": "swapi"}
 logger = logging.getLogger(__name__)
 logger = logging.LoggerAdapter(logger, extra)
+DEFAULT_STATUS = 'pending'
 
 
 class ContextIncludedRoute(APIRoute):
@@ -84,7 +85,7 @@ class ContextIncludedRoute(APIRoute):
                 )
             response: Response = await original_route_handler(request)
 
-            request_status: str = 'pending'
+            request_status: str = DEFAULT_STATUS
             request_id: str = str(uuid4())
             path: str = request.url.path
             method: str = request.method
@@ -105,7 +106,10 @@ class ContextIncludedRoute(APIRoute):
             DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status)
             DB.insert_data('queue_requests', request_id, method, path, body, headers, '')
 
-            dt: int = settings.fake_users_db[username]['dt']
+            acl_data = DB.select_data('acl', 'user', username)
+            dt: Optional[int] = acl_data[0].get('dt')
+            if dt is None:
+                dt = config.fields.get('default_dt')
             logger.info(f'{log_info} User dt is: {dt}. Waiting for response..')
             while dt != 0:
                 result = DB.universal_select(select_done_req_with_response.format(request_id))
@@ -220,9 +224,9 @@ async def get_queue_info(status: Optional[str]):
     return result
 
 
-# Метод перехватывающий любой запрос, кроме объявленных выше
 @router.api_route("/{path_name:path}", methods=["GET", "POST"])
-async def catch_all(request: Request, path_name: str):
+async def catch_all():
+    """Метод перехватывающий любой запрос, кроме объявленных выше"""
     return 1
 
 app.include_router(router)

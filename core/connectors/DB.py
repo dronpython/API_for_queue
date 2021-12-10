@@ -48,7 +48,7 @@ class DataBase:
         with self._connect() as conn:
             with conn.cursor() as cur:
                 try:
-                    insert_string = "INSERT INTO {} VALUES(DEFAULT, {})"
+                    insert_string = 'INSERT INTO {} VALUES(DEFAULT, {})'
                     query = sql.SQL(insert_string).format(sql.Identifier(table),
                                                           sql.SQL(', ').join(sql.Placeholder() * len(args)))
                     cur.execute(query, args)
