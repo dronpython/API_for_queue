@@ -19,7 +19,8 @@ extra = {"source": "swapi"}
 logger = logging.getLogger(__name__)
 logger = logging.LoggerAdapter(logger, extra)
 DEFAULT_STATUS = 'pending'
-
+MAIN_TABLE = 'queue_main'
+REQUEST_TABLE = 'queue_requests'
 
 class ContextIncludedRoute(APIRoute):
     """
@@ -103,13 +104,13 @@ class ContextIncludedRoute(APIRoute):
             # ToDo check domain
             logger.info(f'{log_info} Got request with params: endpoint: {path}, body: {body}, '
                         f'headers: {headers}, username: {username}, status: {request_status}, method: {method}')
-            DB.insert_data('queue_main', request_id, path, 'sigma', username, request_status)
-            DB.insert_data('queue_requests', request_id, method, path, body, headers, '')
+            DB.insert_data(MAIN_TABLE, request_id, path, 'sigma', username, request_status)
+            DB.insert_data(REQUEST_TABLE, request_id, method, path, body, headers, '')
 
             acl_data = DB.select_data('acl', 'user', username)
             dt: Optional[int] = acl_data[0].get('dt')
             if dt is None:
-                dt = config.fields.get('default_dt')
+                dt = int(config.fields.get('default_dt'))
             logger.info(f'{log_info} User dt is: {dt}. Waiting for response..')
             while dt != 0:
                 result = DB.universal_select(select_done_req_with_response.format(request_id))
@@ -196,9 +197,8 @@ async def get_request(request_id: str, response: Response):
 async def update_request(request_id: str, request: Request):
     """Обновить информацию о запросе по request_id"""
     body: dict = await request.json()
-    main_table = 'queue_main'
     param_name = 'request_id'
-    result: dict = DB.update_data(main_table, field_name=body['field'], field_value=body['value'],
+    result: dict = DB.update_data(MAIN_TABLE, field_name=body['field'], field_value=body['value'],
                                   param_name=param_name,
                                   param_value=request_id)
     return result
