@@ -1,3 +1,4 @@
+import asyncio
 import pathlib
 import logging
 from typing import Callable, Optional
@@ -15,12 +16,15 @@ from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
 from core.schemas.users import ResponseTemplateOut
 
-extra = {"source": "swapi"}
+extra = {"source": "qservice"}
 logger = logging.getLogger(__name__)
 logger = logging.LoggerAdapter(logger, extra)
+
 DEFAULT_STATUS = 'pending'
 MAIN_TABLE = 'queue_main'
 REQUEST_TABLE = 'queue_requests'
+ACL_TABLE = 'acl'
+
 
 class ContextIncludedRoute(APIRoute):
     """
@@ -70,8 +74,8 @@ class ContextIncludedRoute(APIRoute):
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail='Basic or Bearer authorize required',
                     )
-                result = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
-                                          login=username, password=password)
+                result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
+                                                login=username, password=password)
                 if not result:
                     logger.info('USER NOT AUTHORIZED IN LDAP')
                     raise HTTPException(
@@ -90,7 +94,6 @@ class ContextIncludedRoute(APIRoute):
             request_id: str = str(uuid4())
             path: str = request.url.path
             method: str = request.method
-            log_info = f'Request_id: {request_id}. '
             if await request.body():
                 body = await request.json()
             elif method == 'GET':
@@ -98,34 +101,33 @@ class ContextIncludedRoute(APIRoute):
             else:
                 body = {}
             body = json.dumps(body)
+            headers = json.dumps(headers_dict)
 
-            headers = str(headers_dict).replace("'", '"')
-
+            log_info = f'Request_id: {request_id}. '
             # ToDo check domain
             logger.info(f'{log_info} Got request with params: endpoint: {path}, body: {body}, '
                         f'headers: {headers}, username: {username}, status: {request_status}, method: {method}')
             DB.insert_data(MAIN_TABLE, request_id, path, 'sigma', username, request_status)
             DB.insert_data(REQUEST_TABLE, request_id, method, path, body, headers, '')
 
-            acl_data = DB.select_data('acl', 'user', username)
+            acl_data = DB.select_data(ACL_TABLE, 'user', username)
             dt: Optional[int] = acl_data[0].get('dt')
             if dt is None:
                 dt = int(config.fields.get('default_dt'))
             logger.info(f'{log_info} User dt is: {dt}. Waiting for response..')
-            while dt != 0:
-                result = DB.universal_select(select_done_req_with_response.format(request_id))
-                if result:
-                    logger.info(f'Come to result with {result}')
-                    logger.info(f'{log_info} Got response. Status: {result[0].status}. Body: {result[0].response_body}')
-                    body = {'message': result[0].status, 'response': result[0].response_body}
+
+            for i in range(dt):
+                if DB.universal_select(select_done_req_with_response.format(request_id)):
+                    query_result = DB.universal_select(select_done_req_with_response.format(request_id))
+                    logger.info(f'Come to result with {query_result}')
+                    logger.info(f'{log_info} Got response. Status: {query_result[0].status}. Body: {query_result[0].response_body}')
+                    body = {'message': query_result[0].status, 'response': query_result[0].response_body}
                     response.body = str(body).encode()
                     response.body = json.dumps(body).encode()
                     response.headers['content-length'] = str(len(response.body))
                     return response
-
                 else:
-                    dt -= 1
-            else:
+                    await asyncio.sleep(1)
                 logger.info(f'{log_info} Response not found. Return id: {request_id}')
                 body = {'message': 'success', 'id': request_id}
 
@@ -139,6 +141,7 @@ class ContextIncludedRoute(APIRoute):
 
 app = FastAPI()
 router = APIRouter(route_class=ContextIncludedRoute)
+app.include_router(router)
 
 
 @app.post('/token/')
@@ -230,7 +233,6 @@ async def catch_all():
     """Метод перехватывающий любой запрос, кроме объявленных выше"""
     return 1
 
-app.include_router(router)
 
 if __name__ == '__main__':
     parent_directory = pathlib.Path(__file__).parent.resolve()
