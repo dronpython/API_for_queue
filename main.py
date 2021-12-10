@@ -141,7 +141,6 @@ class ContextIncludedRoute(APIRoute):
 
 app = FastAPI()
 router = APIRouter(route_class=ContextIncludedRoute)
-app.include_router(router)
 
 
 @app.post('/token/')
@@ -233,6 +232,8 @@ async def catch_all():
     """Метод перехватывающий любой запрос, кроме объявленных выше"""
     return 1
 
+
+app.include_router(router)
 
 if __name__ == '__main__':
     parent_directory = pathlib.Path(__file__).parent.resolve()
