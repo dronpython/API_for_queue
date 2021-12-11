@@ -16,9 +16,7 @@ from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
 from core.schemas.users import ResponseTemplateOut
 
-extra = {"source": "qservice"}
 logger = logging.getLogger(__name__)
-logger = logging.LoggerAdapter(logger, extra)
 
 DEFAULT_STATUS = 'pending'
 MAIN_TABLE = 'queue_main'

@@ -7,7 +7,7 @@ from pydantic import (
 
 class Settings(BaseSettings):
     auth_key: str = 'unusable_key'
-    api_key: str = 'sw.api'
+    api_key: str = 'qservice'
 
     DATABASE_CONFIG = {
         'host': os.environ['db_host'],

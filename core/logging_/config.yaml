@@ -12,12 +12,20 @@ filters:
       - "(?<=(?:\"|')Authorization(?:\"|'): (?:\"|')Basic )[^\"']+(?=(?:\"|'))"
       - "(?<=(?:\"|')Auth(?:\"|'): \\()(.*)(?=\\), (?:\"|'))"
       - "(?<=(?:\"|')access_token(?:\"|'): (?:\"|'))[^\"']+(?=(?:\"|'))"
+  appname:
+    (): core.logging_.filters.namefilter.AppFilter
+
+formatters:
+  simple:
+    format: '%(asctime)s - %(source)s - %(levelname)s - %(message)s'
 
 handlers:
   socket:
     (): core.logging_.handlers.jsonsockethandler.JSONSocketHandler
     filters:
       - masking
+      - appname
+    formatter: simple
     host: log-receiver
     # host: 'localhost'
     port: 9021
