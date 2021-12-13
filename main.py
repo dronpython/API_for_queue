@@ -168,24 +168,16 @@ async def login_for_access_token_new(request: Request):
 @app.get('/queue/request/{request_id}', response_model=ResponseTemplateOut)
 async def get_request(request_id: str, response: Response):
     """Получить информацию о запросе по request_uuid"""
-    result: dict = DB.select_data('queue_main', 'status', param_name='request_id', param_value=request_id)
+    result: dict = DB.select_data('queue_responses', 'status', param_name='request_id', param_value=request_id)
     if result:
         result = result[0]  # because fetch all
         response.status_code = status.HTTP_200_OK
-        if result['status'] != 'pending':
-            return {'payload': {
-                'request_id': request_id,
-                'status': result['status']
-            }
-            }
-        else:
-            payload = {
-                'request_id': result['request_id'],
-                'endpoint': result['endpoint'],
-                'data': result['timestamp'],
-                'author': result['login']
-            }
-            return ResponseTemplateOut(response_status='200 OK', message='done', payload=payload)
+        payload = {
+            'request_id': result['request_id'],
+            'status_code': result['response_status_code'],
+            'body': result['response_body']
+        }
+        return ResponseTemplateOut(response_status='200 OK', message='done', payload=payload)
 
     else:
         response.status_code = status.HTTP_404_NOT_FOUND
