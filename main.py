@@ -168,15 +168,24 @@ async def login_for_access_token_new(request: Request):
 @app.get('/queue/request/{request_id}', response_model=ResponseTemplateOut)
 async def get_request(request_id: str, response: Response):
     """Получить информацию о запросе по request_uuid"""
-    result: dict = DB.select_data('queue_responses', 'status', param_name='request_id', param_value=request_id)
-    if result:
-        result = result[0]  # because fetch all
+    result_main: dict = DB.select_data('queue_main', 'status', param_name='request_id', param_value=request_id)
+    if result_main:
+        result_main = result_main[0]  # because fetch all
         response.status_code = status.HTTP_200_OK
-        payload = {
-            'request_id': result['request_id'],
-            'status_code': result['response_status_code'],
-            'body': result['response_body']
-        }
+        if result_main['status'] == 'done':
+            result_responses: dict = DB.select_data('queue_responses', param_name='request_id', param_value=request_id)
+            result_responses = result_responses[0]  # because fetch all
+            payload = {
+                'request_id': result_responses['request_id'],
+                'status': result_responses['response_status_code'],
+                'body': result_responses['response_body']
+            }
+        else:
+            payload = {
+                'request_id': result_main['request_id'],
+                'endpoint': result_main['endpoint'],
+                'status': result_main['status'],
+            }
         return ResponseTemplateOut(response_status='200 OK', message='done', payload=payload)
 
     else:
