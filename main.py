@@ -119,15 +119,17 @@ class ContextIncludedRoute(APIRoute):
                     query_result = DB.universal_select(select_done_req_with_response.format(request_id))
                     logger.info(f'Come to result with {query_result}')
                     logger.info(f'{log_info} Got response. Status: {query_result[0].status}. Body: {query_result[0].response_body}')
-                    body = {'message': query_result[0].status, 'response': query_result[0].response_body}
+                    body = {'message': query_result[0].status,
+                            'response': query_result[0].response_body,
+                            'request_id': request_id}
                     response.body = str(body).encode()
                     response.body = json.dumps(body).encode()
                     response.headers['content-length'] = str(len(response.body))
                     return response
                 else:
                     await asyncio.sleep(1)
-                logger.info(f'{log_info} Response not found. Return id: {request_id}')
-                body = {'message': 'success', 'id': request_id}
+            logger.info(f'{log_info} Response not found. Return id: {request_id}')
+            body = {'message': 'success', 'id': request_id}
 
             response.body = str(body).encode()
             response.body = json.dumps(body).encode()
