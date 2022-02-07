@@ -127,7 +127,7 @@ class ContextIncludedRoute(APIRoute):
                 else:
                     await asyncio.sleep(1)
                 logger.info(f'{log_info} Response not found. Return id: {request_id}')
-                body = {'message': 'success', 'id': request_id}
+                body = {'message': 'success', 'request_id': request_id}
 
             response.body = str(body).encode()
             response.body = json.dumps(body).encode()
@@ -165,7 +165,7 @@ async def login_for_access_token_new(request: Request):
         )
 
 
-@app.get('/queue/request/{request_id}', response_model=ResponseTemplateOut)
+@app.get('/queue/request/{request_id}')
 async def get_request(request_id: str, response: Response):
     """Получить информацию о запросе по request_uuid"""
     result_main: dict = DB.select_data('queue_main', 'status', param_name='request_id', param_value=request_id)
@@ -177,7 +177,8 @@ async def get_request(request_id: str, response: Response):
             result_responses = result_responses[0]  # because fetch all
             payload = {
                 'request_id': result_responses['request_id'],
-                'status': result_responses['response_status_code'],
+                'endpoint': result_main['endpoint'],
+                'status': result_main['status'],
                 'body': result_responses['response_body']
             }
         else:
@@ -185,12 +186,12 @@ async def get_request(request_id: str, response: Response):
                 'request_id': result_main['request_id'],
                 'endpoint': result_main['endpoint'],
                 'status': result_main['status'],
+                'body': {}
             }
-        return ResponseTemplateOut(response_status='200 OK', message='done', payload=payload)
-
+        return payload
     else:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return ResponseTemplateOut(response_status='200 OK', message='zxc', payload='unluck')
+        return {"error": "not found such request id"}
 
 
 @app.put('/queue/request/{request_id}')
