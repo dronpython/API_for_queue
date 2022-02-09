@@ -10,7 +10,7 @@ import json
 from fastapi import FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
 
-from core.services.security import get_creds
+from core.services.security import get_creds, get_token
 from core.settings import config
 from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
@@ -137,10 +137,8 @@ router = APIRouter(route_class=ContextIncludedRoute)
 async def login_for_access_token_new(request: Request):
     """Получить токен новый
     """
-    a = request.headers.get('authorization')
-    token = requests.post(config.fields.get('api_server') + '/api/v3/svc/get_token', json={}, headers=request.headers)
-    print(token)
-    return {'token':token}
+    token = get_token(request.headers)
+    return {'token': token}
 
 
 @app.get('/queue/request/{request_id}')

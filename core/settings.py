@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     class Config:
         env_prefix = '.env'  # defaults to no prefix, i.e. ''
         fields = {
+            # ToDo change to env var
+            'api_server': 'https://sssw-dev.sigma.sbrf.ru',
+
             'auth_key': {
                 'env': 'my_auth_key',
             },

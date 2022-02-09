@@ -1,5 +1,6 @@
 from base64 import urlsafe_b64encode, b64decode, b64encode
 import hashlib
+import requests
 
 from fastapi import Request
 from cryptography.fernet import Fernet, InvalidToken
@@ -61,3 +62,14 @@ async def get_hash(text):
     for x in range(10):
         m.update(text.encode())
     return m.hexdigest()
+
+
+async def get_token(headers):
+    try:
+        response = requests.post(config.fields.get('api_server') + '/api/v3/svc/get_token',
+                             json={}, headers=headers)
+        token = response.json().get('token')
+    except Exception as e:
+        print(e)
+        token = ''
+    return token
