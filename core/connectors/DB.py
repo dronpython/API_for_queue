@@ -40,7 +40,7 @@ class DataBase:
                     query_result = cur.fetchall() if not fetch_one else cur.fetchone()
                 except (Exception, DatabaseError) as error:
                     logger.info(error)
-                    query_result = None
+                    query_result = {}  # or []?
                 return query_result
 
     def insert_data(self, table, *args):

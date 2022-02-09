@@ -10,7 +10,7 @@ import json
 from fastapi import FastAPI, HTTPException, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
 
-from core.services.security import decrypt_password, encrypt_password, InvalidToken, get_creds, old_api_token
+from core.services.security import get_creds
 from core.settings import config
 from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
@@ -35,9 +35,9 @@ class ContextIncludedRoute(APIRoute):
             if request.headers.get('authorization'):
                 if 'Basic' in request.headers.get('authorization'):
                     credentials_answer = await get_creds(request)
-                    logger.info('GET BASIC AUTH')
+                    logger.info('GOT BASIC AUTH')
                     if not credentials_answer:
-                        logger.info('NOT CREDENTIALS IN HEADER')
+                        logger.info('NO CREDENTIALS IN HEADER')
                         raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Can not find auth header',
@@ -48,7 +48,7 @@ class ContextIncludedRoute(APIRoute):
                     logger.info('GOT NO AUTH')
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail='Basic or Bearer authorize required',
+                        detail='Token or Basic authorize required',
                     )
                 result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA',
                                                 login=username, password=password)
@@ -73,7 +73,7 @@ class ContextIncludedRoute(APIRoute):
                 logger.info('GOT NO AUTH')
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail='Authorize required',
+                    detail='Token or Basic auth required',
                 )
             response: Response = await original_route_handler(request)
 
@@ -97,10 +97,11 @@ class ContextIncludedRoute(APIRoute):
             DB.insert_data(MAIN_TABLE, request_id, path, 'sigma', username, request_status)
             DB.insert_data(REQUEST_TABLE, request_id, method, path, body, headers, '')
 
-            acl_data = DB.select_data(ACL_TABLE, 'user', username)
-            dt: Optional[int] = acl_data[0].get('dt')
+            acl_data = DB.select_data(ACL_TABLE, 'user', username, fetch_one=True)
+            dt: Optional[int] = acl_data.get('dt')
             if dt is None:
-                dt = int(config.fields.get('default_dt'))
+                dt = 1
+                # dt = int(config.fields.get('default_dt'))
             logger.info(f'{log_info} User dt is: {dt}. Waiting for response..')
 
             for i in range(dt):
@@ -145,13 +146,13 @@ async def login_for_access_token_new(request: Request):
 @app.get('/queue/request/{request_id}')
 async def get_request(request_id: str, response: Response):
     """Получить информацию о запросе по request_uuid"""
-    result_main: dict = DB.select_data('queue_main', 'status', param_name='request_id', param_value=request_id)
+    result_main: dict = DB.select_data('queue_main', 'status', param_name='request_id',
+                                       param_value=request_id, fetch_one=True)
     if result_main:
-        result_main = result_main[0]  # because fetch all
         response.status_code = status.HTTP_200_OK
         if result_main['status'] == 'done':
-            result_responses: dict = DB.select_data('queue_responses', param_name='request_id', param_value=request_id)
-            result_responses = result_responses[0]  # because fetch all
+            result_responses = DB.select_data('queue_responses', param_name='request_id',
+                                              param_value=request_id, fetch_one=True)
             payload = {
                 'request_id': result_responses['request_id'],
                 'endpoint': result_main['endpoint'],
