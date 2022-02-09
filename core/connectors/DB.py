@@ -26,7 +26,7 @@ class DataBase:
             logger.info(error.__traceback__)
             return None
 
-    def select_data(self, table, *args, param_name: Union[str, int] = 1, param_value: Union[str, int] = 1):
+    def select_data(self, table, *args, param_name: Union[str, int] = 1, param_value: Union[str, int] = 1, fetch_one=False):
         """Выборка записей из базы данных."""
         with self._connect() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -37,7 +37,7 @@ class DataBase:
                     else sql.Literal(param_name)
                                                                  )
                     cur.execute(select_query, (param_value,))
-                    query_result = cur.fetchall()
+                    query_result = cur.fetchall() if not fetch_one else cur.fetchone()
                 except (Exception, DatabaseError) as error:
                     logger.info(error)
                     query_result = None

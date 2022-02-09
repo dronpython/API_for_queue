@@ -3,7 +3,7 @@ import pathlib
 import logging
 from typing import Callable, Optional
 from uuid import uuid4
-import re
+import requests
 
 import uvicorn
 import json
@@ -14,7 +14,6 @@ from core.services.security import decrypt_password, encrypt_password, InvalidTo
 from core.settings import config
 from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
-from core.schemas.users import ResponseTemplateOut
 
 logger = logging.getLogger(__name__)
 
@@ -33,29 +32,8 @@ class ContextIncludedRoute(APIRoute):
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request):
-            auth_header: str = request.headers.get('authorization')
-            if auth_header:
-                headers_dict = dict(request.headers)
-                if 'Bearer' in auth_header:
-                    try:
-                        token: str = re.sub('Bearer[:]? ', '', auth_header)
-                        data: str = await decrypt_password(token)
-                        logger.info('GOT BEARER TOKEN')
-                    except InvalidToken:
-                        logger.info('INVALID TOKEN')
-                        raise HTTPException(
-                            status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail='Invalid token',
-                        )
-                    username, password, date = data.split('|')
-
-                    # Для работы со старой API
-                    old_api_auth_header = await old_api_token(username, password)
-                    headers_dict.pop('authorization', None)
-                    headers_dict['token'] = old_api_auth_header
-
-                    logger.info('GOT USERNAME, PASSWORD AND EXPIRE DATE')
-                elif 'Basic' in auth_header:
+            if request.headers.get('authorization'):
+                if 'Basic' in request.headers.get('authorization'):
                     credentials_answer = await get_creds(request)
                     logger.info('GET BASIC AUTH')
                     if not credentials_answer:
@@ -80,6 +58,17 @@ class ContextIncludedRoute(APIRoute):
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail='User not authorized in ldap',
                     )
+            elif request.headers.get('token'):
+                token: str = request.headers['token']
+                token_db: str = DB.select_data('tokens', param_name='token', param_value=token, fetch_one=True)
+                if token_db:
+                    username = token_db.get('user')
+                else:
+                    logger.info('NO SUCH TOKEN IN DB')
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail='Authorize required',
+                    )
             else:
                 logger.info('GOT NO AUTH')
                 raise HTTPException(
@@ -99,7 +88,7 @@ class ContextIncludedRoute(APIRoute):
             else:
                 body = {}
             body = json.dumps(body)
-            headers = json.dumps(headers_dict)
+            headers = json.dumps(dict(request.headers))
 
             log_info = f'Request_id: {request_id}. '
             # ToDo check domain
@@ -143,28 +132,14 @@ app = FastAPI()
 router = APIRouter(route_class=ContextIncludedRoute)
 
 
-@app.post('/token/')
+@app.post('/api/v3/svc/get_token')
 async def login_for_access_token_new(request: Request):
     """Получить токен новый
     """
-    credentials_answer = await get_creds(request)
-    if not credentials_answer:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Can not find auth header',
-        )
-    username, password = credentials_answer
-    result: bool = ldap._check_auth(server=config.fields.get('servers').get('ldap'), domain='SIGMA', login=username,
-                                    password=password)
-    if result:
-        security_string: str = username + '|' + password + '|' + '10.01.2020'
-        access_token: str = await encrypt_password(security_string)
-        return {'access_token': f'Bearer: {access_token}'}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Incorrect username or password',
-        )
+    a = request.headers.get('authorization')
+    token = requests.post(config.fields.get('api_server') + '/api/v3/svc/get_token', json={}, headers=request.headers)
+    print(token)
+    return {'token':token}
 
 
 @app.get('/queue/request/{request_id}')
