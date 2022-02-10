@@ -100,8 +100,7 @@ class ContextIncludedRoute(APIRoute):
             acl_data = DB.select_data(ACL_TABLE, 'user', username, fetch_one=True)
             dt: Optional[int] = acl_data.get('dt')
             if dt is None:
-                dt = 1
-                # dt = int(config.fields.get('default_dt'))
+                dt = int(config.fields.get('default_dt'))
             logger.info(f'{log_info} User dt is: {dt}. Waiting for response..')
 
             for i in range(dt):
@@ -137,7 +136,7 @@ router = APIRouter(route_class=ContextIncludedRoute)
 async def login_for_access_token_new(request: Request):
     """Получить токен новый
     """
-    token = get_token(request.headers)
+    token = await get_token(request.headers)
     return {'token': token}
 
 
