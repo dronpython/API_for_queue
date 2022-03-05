@@ -14,7 +14,7 @@ ENV LANG en_US.UTF-8
 
 ADD /docker/alpha/yum.repos.d/* /etc/yum.repos.d/
 ADD /docker/alpha/ca-certs/* /etc/pki/ca-trust/source/anchors/
-ADD /docker/alpha/pip-sigma.conf /etc/pip.conf
+ADD /docker/alpha/pip-alpha.conf /etc/pip.conf
 ADD /requirements.txt /requirements.txt
 
 ENV PATH=/opt/rh/rh-python36/root/usr/bin${PATH:+:${PATH}} \
