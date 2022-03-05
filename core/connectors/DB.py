@@ -10,6 +10,7 @@ select_done_req_with_response = """SELECT qm.request_id, qm.status, qr.response_
 JOIN queue_responses qr on qm.request_id = qr.request_id
 WHERE qm.request_id = \'{}\' AND (qm.status = 'done' OR qm.status = 'error')"""
 
+
 logger = logging.getLogger()
 
 
