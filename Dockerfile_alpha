@@ -32,10 +32,10 @@ RUN yum install  gcc gcc-c++ \
     python36 python36-devel python36-pip  -y \
     postgresql-devel
 
-RUN python3 -m pip install --upgrade pip -i http://mirror.sigma.sbrf.ru/pypi/simple/ --trusted-host mirror.sigma.sbrf.ru
-RUN python3 -m pip install --upgrade --force-reinstall --no-cache-dir setuptools_rust -i http://mirror.sigma.sbrf.ru/pypi/simple/ --trusted-host mirror.sigma.sbrf.ru
-RUN python3 -m pip install --upgrade --force-reinstall --no-cache-dir wheel -i http://mirror.sigma.sbrf.ru/pypi/simple/ --trusted-host mirror.sigma.sbrf.ru
-RUN python3 -m pip install -r /requirements.txt -i http://mirror.sigma.sbrf.ru/pypi/simple/ --trusted-host mirror.sigma.sbrf.ru
+RUN python3 -m pip install --upgrade pip -i http://mirror.ca.sbrf.ru/pypi/simple/ --trusted-host mirror.ca.sbrf.ru
+RUN python3 -m pip install --upgrade --force-reinstall --no-cache-dir setuptools_rust -i http://mirror.ca.sbrf.ru/pypi/simple/ --trusted-host mirror.ca.sbrf.ru
+RUN python3 -m pip install --upgrade --force-reinstall --no-cache-dir wheel -i http://mirror.ca.sbrf.ru/pypi/simple/ --trusted-host mirror.ca.sbrf.ru
+RUN python3 -m pip install -r /requirements.txt -i http://mirror.ca.sbrf.ru/pypi/simple/ --trusted-host mirror.ca.sbrf.ru
 COPY . /app
 WORKDIR /app
 CMD ["python3", "main.py"]
