@@ -12,9 +12,9 @@ ENV LANG en_US.UTF-8
 # RUN rm -f /etc/localtime
 # RUN ln -s /usr/share/zoneinfo/Europe/Moscow /etc/localtime
 
-ADD /docker/sigma/yum.repos.d/* /etc/yum.repos.d/
-ADD /docker/sigma/ca-certs/* /etc/pki/ca-trust/source/anchors/
-ADD /docker/sigma/pip-sigma.conf /etc/pip.conf
+ADD /docker/alpha/yum.repos.d/* /etc/yum.repos.d/
+ADD /docker/alpha/ca-certs/* /etc/pki/ca-trust/source/anchors/
+ADD /docker/alpha/pip-sigma.conf /etc/pip.conf
 ADD /requirements.txt /requirements.txt
 
 ENV PATH=/opt/rh/rh-python36/root/usr/bin${PATH:+:${PATH}} \
