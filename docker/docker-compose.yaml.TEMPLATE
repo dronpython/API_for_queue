@@ -1,0 +1,69 @@
+version: '3'
+services:
+  api-server:
+    container_name: api-server-(dev|test|prom)
+    labels:
+      environment: (dev|test|prom)
+      domain: alpha
+    #restart: always
+    environment: 
+
+      # set hosts n creds
+      - sentry_dsn=
+      - rolemodel=
+
+      - bb_server=
+      - bb_user=
+      - bb_password=
+
+      - redis_conf=
+      - redis_password=
+
+      - nexus_server=
+      - nexus_user=
+      - nexus_password=
+
+      - crowd_server=
+      - crowd_user=
+      - crowd_password=
+
+      - confluence_server=
+      - confluence_user=
+      - confluence_password=
+
+      - jira_server=
+      - jira_user=
+      - jira_password=
+
+      - ldap_conf=
+      - ldap_user=
+      - ldap_password=
+      - ldap_domain=
+
+      - jenkins_serverCI=
+      - jenkins_serverCDL=
+      - jenkins_user=
+      - jenkins_password=
+
+      - ora_rep_server=
+      - ora_rep_user=
+      - ora_rep_password=
+
+      - sonar_server=
+      - sonar_user=
+      - sonar_password=
+
+      # set current domain and env
+      - domain=ALPHA
+      - stand=DEV
+
+    ports:
+      # choose port 
+      - "4400:8000"                   
+    volumes:
+      # choose path to logs on host
+      - /u01/logs/devopsapi/(dev|test|prom)/:/app/logs/
+    build: 
+      context: ../../../
+      # set dockerfile name
+      dockerfile: Dockerfile_(alpha|sigma)

@@ -1,0 +1,36 @@
+version: 1
+disable_existing_loggers: False
+
+
+filters:
+  masking:
+    (): core.logging_.filters.maskingfilter.MaskingFilter
+    mask: "*****"
+    patterns:
+      - "AToken:[a-z0-9]+"
+      - "(?<=(?:\"|')password(?:\"|'): (?:\"|'))[^\"']+(?=(?:\"|'))"
+      - "(?<=(?:\"|')Authorization(?:\"|'): (?:\"|')Basic )[^\"']+(?=(?:\"|'))"
+      - "(?<=(?:\"|')Auth(?:\"|'): \\()(.*)(?=\\), (?:\"|'))"
+      - "(?<=(?:\"|')access_token(?:\"|'): (?:\"|'))[^\"']+(?=(?:\"|'))"
+  appname:
+    (): core.logging_.filters.namefilter.AppFilter
+
+formatters:
+  simple:
+    format: '%(asctime)s - %(source)s - %(levelname)s - %(message)s'
+
+handlers:
+  socket:
+    (): core.logging_.handlers.jsonsockethandler.JSONSocketHandler
+    filters:
+      - masking
+      - appname
+    formatter: simple
+    host: log-receiver
+    # host: 'localhost'
+    port: 9021
+
+root:
+  handlers:
+    - socket
+  level: DEBUG

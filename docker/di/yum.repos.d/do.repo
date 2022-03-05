@@ -1,0 +1,26 @@
+[docker-ce-stable]
+name=Docker CE Stable $basearch
+baseurl=https://download.docker.com/linux/centos/7/$basearch/stable
+enabled=1
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+[RHEL7-latest]
+name=RHEL7-latest
+baseurl=http://80.66.93.19/rhel-7-server-rpms/
+enabled=1
+gpgcheck=0
+
+[docker-ce-stable-debuginfo]
+name=Docker CE Stable Debuginfo
+baseurl=https://download.docker.com/linux/centos/7/debug-$basearch/stable
+enabled=0
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+[docker-ce-stable-source]
+name=Docker CE Stable Sources
+baseurl=https://download.docker.com/linux/centos/7/source/stable
+enabled=1
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg

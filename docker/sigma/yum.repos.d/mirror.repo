@@ -1,0 +1,71 @@
+[RHEL7-latest]
+name=Red Hat EL 7 latest
+baseurl=http://mirror.sigma.sbrf.ru/rhel/RHEL7
+gpgcheck=0
+
+[RHEL-7-scl]
+name=Red Hat EL 7 scl
+baseurl=http://mirror.sigma.sbrf.ru/rhel/rhel-server-rhscl-7-rpms
+gpgcheck=0
+
+[RHEL-7-fast-datapath-rpms]
+name=Red Hat EL 7 fast datapah
+baseurl=http://mirror.sigma.sbrf.ru/rhel/rhel-7-fast-datapath-rpms
+gpgcheck=0
+enabled=0
+
+[RHEL-7-ansible-2.5]
+name=Red Hat EL 7 ansible 2.5
+baseurl=http://mirror.sigma.sbrf.ru/rhel/rhel-7-server-ansible-2.5-rpms
+gpgcheck=0
+enabled=0
+
+[RHEL-7-ansible-2.6]
+name=Red Hat EL 7 ansible 2.6
+baseurl=http://mirror.sigma.sbrf.ru/rhel/rhel-7-server-ansible-2.6-rpms
+gpgcheck=0
+enabled=0
+
+
+[RHEL-7-server-extras-rpms]
+name=Red Hat EL7 server-extras-rpms
+baseurl=http://mirror.sigma.sbrf.ru/rhel/rhel-7-server-extras-rpms
+gpgcheck=0
+
+
+[rhel-7-server-ose-3.9-rpms]
+name=rhel-7-server-ose-3.9-rpms
+baseurl=http://mirror.sigma.sbrf.ru/rhel/rhel-7-server-ose-3.9-rpms
+gpgcheck=0
+enabled=0
+
+[rhel-7-server-ose-3.11-rpms]
+name=rhel-7-server-ose-3.11-rpms
+baseurl=http://mirror.sigma.sbrf.ru/rhel/rhel-7-server-ose-3.11-rpms
+gpgcheck=0
+enabled=0
+
+[rhel-7-server-optional-rpms]
+name=rhel-7-server-optional-rpms
+baseurl=http://mirror.sigma.sbrf.ru/rhel/rhel-7-server-optional-rpms
+gpgcheck=0
+enabled=1
+
+
+[rhel-7-server-thirdparty-oraclejava-rpms]
+name=rhel-7-server-thirdparty-oraclejava-rpms
+baseurl=http://mirror.sigma.sbrf.ru/rhel-extras/rhel-7-server-thirdparty-oraclejava-rpms
+gpgcheck=0
+enabled=1
+
+[EPEL7]
+name=EPEL7
+baseurl=http://mirror.sigma.sbrf.ru/rhel-extras/EPEL7
+gpgcheck=0
+
+
+[MSSQL-CLNT]
+name=MSSQL Client
+baseurl=http://mirror.sigma.sbrf.ru/rhel-extras/microsoft
+gpgcheck=0
+enabled=0
