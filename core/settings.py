@@ -21,7 +21,7 @@ class Settings(BaseSettings):
         env_prefix = '.env'  # defaults to no prefix, i.e. ''
         fields = {
             # ToDo change to env var
-            'api_server': 'https://sssw-dev.sigma.sbrf.ru',
+            'api_server': os.environ['old_api_url'] + ':' + os.environ['old_api_port'],
 
             'auth_key': {
                 'env': 'my_auth_key',
