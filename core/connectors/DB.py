@@ -6,7 +6,7 @@ from psycopg2.extras import NamedTupleCursor, RealDictCursor
 
 from core.settings import settings
 
-select_done_req_with_response = """SELECT qm.request_id, qm.status, qr.response_body FROM queue_main qm
+select_done_req_with_response: str = """SELECT qm.request_id, qm.status, qr.response_body FROM queue_main qm
 JOIN queue_responses qr on qm.request_id = qr.request_id
 WHERE qm.request_id = \'{}\' AND (qm.status = 'done' OR qm.status = 'error')"""
 
@@ -15,6 +15,8 @@ logger = logging.getLogger()
 
 
 class DataBase:
+    """Класс для работы с базой данных
+    """
     def __init__(self, database_config: dict):
         self.config = database_config
         self.conn = self._connect()
@@ -34,10 +36,10 @@ class DataBase:
                 try:
                     select_string = 'SELECT * FROM {} WHERE {}=%s'
                     select_query = sql.SQL(select_string).format(sql.Identifier(table), sql.Identifier(param_name)
-                    if isinstance(param_name, str)
-                    else sql.Literal(param_name)
+                    if isinstance(param_name, str) else sql.Literal(param_name)
                                                                  )
-                    cur.execute(select_query, (param_value,))
+                    cur.execute(select_query, (param_value,)
+                                )
                     query_result = cur.fetchall() if not fetch_one else cur.fetchone()
                 except (Exception, DatabaseError) as error:
                     logger.info(error)
@@ -89,12 +91,12 @@ class DataBase:
         with self._connect() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 try:
-                    paramlist = list()
+                    paramlist = []
                     if kwargs.get('period'):
                         paramlist.append(
                             f"SELECT * FROM queue_main WHERE timestamp >= NOW()::timestamp - INTERVAL '%(period)s minutes'", )
                     else:
-                        paramlist.append(f"SELECT * FROM queue_main WHERE timestamp < NOW()::timestamp")
+                        paramlist.append("SELECT * FROM queue_main WHERE timestamp < NOW()::timestamp")
                     if kwargs.get('status'):
                         paramlist.append(f"and status = %(status)s")
                     if kwargs.get('directory'):
