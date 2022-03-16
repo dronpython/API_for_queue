@@ -14,6 +14,7 @@ from core.services.security import get_creds, get_token
 from core.settings import config
 from core.connectors.DB import DB, select_done_req_with_response
 from core.connectors.LDAP import ldap
+from contextvars import ContextVar
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,14 @@ DEFAULT_STATUS = 'pending'
 MAIN_TABLE = 'queue_main'
 REQUEST_TABLE = 'queue_requests'
 ACL_TABLE = 'acl'
+
+rqid: ContextVar[str] = ContextVar('request_id', default='service')
+
+
+class RequestIdFilter(logging.Filter):
+    def filter(self, record):
+        record.request_id = rqid.get()
+        return True
 
 
 class ContextIncludedRoute(APIRoute):
@@ -79,6 +88,7 @@ class ContextIncludedRoute(APIRoute):
 
             request_status: str = DEFAULT_STATUS
             request_id: str = str(uuid4())
+            rqid.set(request_id)
             path: str = request.url.path
             method: str = request.method
             if await request.body():
@@ -88,7 +98,9 @@ class ContextIncludedRoute(APIRoute):
             else:
                 body = {}
             body = json.dumps(body)
-            headers = json.dumps(dict(request.headers))
+            headers = dict(request.headers)
+            headers.update({'X-Request-Id': request_id})
+            headers = json.dumps(headers)
 
             log_info = f'Request_id: {request_id}. '
             # ToDo check domain
