@@ -6,17 +6,13 @@ from psycopg2.extras import NamedTupleCursor, RealDictCursor
 
 from core.settings import settings
 
-select_done_req_with_response: str = """SELECT qm.request_id, qm.status, qr.response_body FROM queue_main qm
-JOIN queue_responses qr on qm.request_id = qr.request_id
-WHERE qm.request_id = \'{}\' AND (qm.status = 'done' OR qm.status = 'error')"""
-
-
 logger = logging.getLogger()
 
 
 class DataBase:
     """Класс для работы с базой данных
     """
+
     def __init__(self, database_config: dict):
         self.config = database_config
         self.conn = self._connect()
@@ -29,7 +25,8 @@ class DataBase:
             logger.info(error.__traceback__)
             return None
 
-    def select_data(self, table, *args, param_name: Union[str, int] = 1, param_value: Union[str, int] = 1, fetch_one=False):
+    def select_data(self, table, *args, param_name: Union[str, int] = 1, param_value: Union[str, int] = 1,
+                    fetch_one=False):
         """Выборка записей из базы данных."""
         with self._connect() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
