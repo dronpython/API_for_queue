@@ -3,6 +3,7 @@ import pathlib
 import logging
 from typing import Callable, Optional
 from uuid import uuid4
+from contextvars import ContextVar
 
 import uvicorn
 import json
@@ -17,6 +18,14 @@ from core.services.database_utility import is_data_added_to_db, is_request_done,
 from core.services.data_processing import get_data_from_request
 
 logger = logging.getLogger(__name__)
+
+rqid: ContextVar[str] = ContextVar('request_id', default='service')
+
+
+class RequestIdFilter(logging.Filter):
+    def filter(self, record):
+        record.request_id = rqid.get()
+        return True
 
 
 class ContextIncludedRoute(APIRoute):

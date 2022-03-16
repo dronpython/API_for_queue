@@ -14,10 +14,12 @@ filters:
       - "(?<=(?:\"|')access_token(?:\"|'): (?:\"|'))[^\"']+(?=(?:\"|'))"
   appname:
     (): core.logging_.filters.namefilter.AppFilter
+  requestid:
+    (): main.RequestIdFilter
 
 formatters:
   simple:
-    format: '%(asctime)s - %(source)s - %(levelname)s - %(message)s'
+    format: '%(request_id)s - %(asctime)s - %(source)s - %(levelname)s - %(message)s'
 
 handlers:
   socket:
@@ -25,6 +27,7 @@ handlers:
     filters:
       - masking
       - appname
+      - requestid
     formatter: simple
     host: log-receiver
     # host: 'localhost'
