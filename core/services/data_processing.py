@@ -1,5 +1,5 @@
 import json
-from typing import Optional
+from typing import Optional, Tuple
 from fastapi import Request
 
 import core.services.database_utility as db_util
@@ -14,7 +14,7 @@ async def is_hashed_data_exist(hashed_data: str) -> bool:
     return False
 
 
-async def handle_body(method: str, request: Request):
+async def handle_body(method: str, request: Request) -> str:
     """Обработка тела запроса при разных ситуациях.
     """
     if await request.body():
@@ -27,7 +27,7 @@ async def handle_body(method: str, request: Request):
     return body
 
 
-async def get_data_from_request(request: Request):
+async def get_data_from_request(request: Request) -> Tuple:
     """Получить данные из запроса
     """
     path: str = request.url.path
