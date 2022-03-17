@@ -2,7 +2,7 @@ import json
 from typing import Optional, Tuple
 from fastapi import Request
 
-import core.services.database_utility as db_util
+from core.services import database_utility as db_util
 
 
 async def is_hashed_data_exist(hashed_data: str) -> bool:
