@@ -45,20 +45,20 @@ class ContextIncludedRoute(APIRoute):
             _, _, body, headers = await get_data_from_request(request)
             data_for_hash: str = f"{str(headers)}:{str(body)}"
             hashed_data = await get_hash(data_for_hash)
-
             data_added = await is_data_added_to_db(request, username, request_id, hashed_data)
 
             if not data_added:
+                logger.info('Data not added')
                 hashed_data_from_db = await get_hashed_data_from_db(hashed_data)
                 hashed_data_request_id = hashed_data_from_db['request_id']
-                hashed_data_status = await get_status(hashed_data_request_id)
-                if hashed_data_status.lower() in [PENDING_STATUS, WORKING_STATUS]:
-                    body = {'message': 'same request already in progress',
-                            'request_id': hashed_data_request_id
-                            }
-                    response.body = json.dumps(body).encode()
-                    response.headers['content-length'] = str(len(response.body))
-                    return response
+
+                logger.info(f'Request id from queue_hashed = {hashed_data_request_id}')
+                body = {'message': 'same request already in progress',
+                        'request_id': hashed_data_request_id
+                        }
+                response.body = json.dumps(body).encode()
+                response.headers['content-length'] = str(len(response.body))
+                return response
 
             delta_time = await get_dt(username, request_id)
 

@@ -32,7 +32,9 @@ async def is_data_added_to_db(request: Request, username: str, request_id: str, 
     # ToDo check domain
     logger.info(f'{log_info} Got request with params: endpoint: {path}, body: {body}, '
                 f'headers: {headers}, username: {username}, status: {request_status}, method: {method}')
-    if not await is_hashed_data_exist(hashed_data):
+
+    if not await is_hashed_data_exist(hashed_data) or not await is_request_pending_working(hashed_data):
+        logger.info('Adding data to MAIN_TABLE, REQUEST_TABLE, HASHED_DATA_TABLE')
         DB.insert_data(MAIN_TABLE, request_id, path, 'sigma', username, request_status)
         DB.insert_data(REQUEST_TABLE, request_id, method, path, body, headers, '')
         DB.insert_data(HASHED_DATA_TABLE, request_id, hashed_data)
@@ -74,3 +76,13 @@ async def get_status(request_id: str) -> str:
                                        param_value=request_id, fetch_one=True)
     request_status: str = result_main['status']
     return request_status
+
+
+async def is_request_pending_working(hashed_data) -> bool:
+    hashed_data_from_db: dict = await get_hashed_data_from_db(hashed_data)
+    if hashed_data_from_db:
+        hashed_data_request_id: str = hashed_data_from_db['request_id']
+        hashed_data_status: str = await get_status(hashed_data_request_id)
+        not_pending_working: bool = hashed_data_status.lower() in [PENDING_STATUS, WORKING_STATUS]
+        return not_pending_working
+    return False
