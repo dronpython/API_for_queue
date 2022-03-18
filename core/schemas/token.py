@@ -9,6 +9,5 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    """Модель данных у токена.
-    """
+    """Модель данных у токена."""
     username: Optional[str] = None

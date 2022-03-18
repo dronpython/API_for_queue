@@ -14,7 +14,7 @@ TEST_JSON = {"user": "asd"}
 database_config = settings.DATABASE_CONFIG
 
 
-@pytest.fixture(autouse=False, scope='function')
+@pytest.fixture(autouse=False, scope="function")
 def fixture_clean_queue_main():
     with connect(**database_config) as conn:
         with conn.cursor() as cursor:
@@ -22,7 +22,7 @@ def fixture_clean_queue_main():
             conn.commit()
 
 
-@pytest.fixture(autouse=False, scope='function')
+@pytest.fixture(autouse=False, scope="function")
 def fixture_clean_queue_request():
     with connect(**database_config) as conn:
         with conn.cursor() as cursor:
@@ -40,8 +40,8 @@ def test_empty_queue_main(fixture_clean_queue_main):
 
 def test_add_to_empty_queue_main(fixture_clean_queue_main, user, user_password):
     creds = f"{user}:{user_password}"
-    user_and_pass = b64encode(bytes(creds, encoding='utf8')).decode("ascii")
-    headers = {'Authorization': 'Basic %s' % user_and_pass}
+    user_and_pass = b64encode(bytes(creds, encoding="utf8")).decode("ascii")
+    headers = {"Authorization": "Basic %s" % user_and_pass}
     client.post("/bb/zxc/", json=TEST_JSON, headers=headers)
     with connect(**database_config) as conn:
         with conn.cursor() as cursor:
@@ -52,8 +52,8 @@ def test_add_to_empty_queue_main(fixture_clean_queue_main, user, user_password):
 
 def test_add_to_non_empty_queue_main(user, user_password):
     creds = f"{user}:{user_password}"
-    user_and_pass = b64encode(bytes(creds, encoding='utf8')).decode("ascii")
-    headers = {'Authorization': 'Basic %s' % user_and_pass}
+    user_and_pass = b64encode(bytes(creds, encoding="utf8")).decode("ascii")
+    headers = {"Authorization": "Basic %s" % user_and_pass}
     client.post("/bb/zxc/", json=TEST_JSON, headers=headers)
     with connect(**database_config) as conn:
         with conn.cursor() as cursor:
@@ -64,8 +64,8 @@ def test_add_to_non_empty_queue_main(user, user_password):
 
 def test_add_to_empty_queue_requests(fixture_clean_queue_request, user, user_password):
     creds = f"{user}:{user_password}"
-    user_and_pass = b64encode(bytes(creds, encoding='utf8')).decode("ascii")
-    headers = {'Authorization': 'Basic %s' % user_and_pass}
+    user_and_pass = b64encode(bytes(creds, encoding="utf8")).decode("ascii")
+    headers = {"Authorization": "Basic %s" % user_and_pass}
     client.post("/bb/zxc/", json=TEST_JSON, headers=headers)
     with connect(**database_config) as conn:
         with conn.cursor() as cursor:
@@ -76,8 +76,8 @@ def test_add_to_empty_queue_requests(fixture_clean_queue_request, user, user_pas
 
 def test_add_to_non_empty_queue_requests(user, user_password):
     creds = f"{user}:{user_password}"
-    user_and_pass = b64encode(bytes(creds, encoding='utf8')).decode("ascii")
-    headers = {'Authorization': 'Basic %s' % user_and_pass}
+    user_and_pass = b64encode(bytes(creds, encoding="utf8")).decode("ascii")
+    headers = {"Authorization": "Basic %s" % user_and_pass}
     client.post("/bb/zxc/", json=TEST_JSON, headers=headers)
     with connect(**database_config) as conn:
         with conn.cursor() as cursor:

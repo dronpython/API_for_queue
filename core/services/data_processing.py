@@ -6,8 +6,7 @@ from core.services import database_utility as db_util
 
 
 async def is_hashed_data_exist(hashed_data: str) -> bool:
-    """Есть ли в базе запись с таким же хэшем.
-    """
+    """Есть ли в базе запись с таким же хэшем."""
     hashed_data_in_db: Optional[dict] = await db_util.get_hashed_data_from_db(hashed_data)
     if hashed_data_in_db:
         return True
@@ -15,11 +14,10 @@ async def is_hashed_data_exist(hashed_data: str) -> bool:
 
 
 async def handle_body(method: str, request: Request) -> str:
-    """Обработка тела запроса при разных ситуациях.
-    """
+    """Обработка тела запроса при разных ситуациях."""
     if await request.body():
         body = await request.json()
-    elif method == 'GET':
+    elif method == "GET":
         body = dict(request.query_params)
     else:
         body = {}
@@ -28,8 +26,7 @@ async def handle_body(method: str, request: Request) -> str:
 
 
 async def get_data_from_request(request: Request) -> Tuple:
-    """Получить данные из запроса
-    """
+    """Получить данные из запроса."""
     path: str = request.url.path
     method: str = request.method
     body = await handle_body(method, request)
