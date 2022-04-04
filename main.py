@@ -38,7 +38,7 @@ class ContextIncludedRoute(APIRoute):
         async def custom_route_handler(request: Request):
             username = await verify_request(request.headers)
             request_id: str = str(uuid4())
-
+            rqid.set(request_id)
             response: Response = await original_route_handler(request)
 
             _, _, body, headers = await get_data_from_request(request)
