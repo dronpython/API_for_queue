@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 
 class User(BaseModel):
+    """Модель пользователя."""
     username: str
     email: Optional[str] = None
     full_name: Optional[str] = None
@@ -10,11 +11,12 @@ class User(BaseModel):
 
 
 class UserInDB(User):
+    """Модель пользователя в базе данных."""
     hashed_password: str
 
 
 class ResponseTemplateOut(BaseModel):
-    response_status: str = '200 OK'
-    message: str = 'default message'
-    errors: Union[list, str] = ''
-    payload: Union[dict, str] = ''
+    """Модель ответов."""
+    message: str = "success"
+    errors: list = []
+    payload: dict = {}

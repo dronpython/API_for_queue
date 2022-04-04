@@ -6,51 +6,53 @@ from pydantic import (
 
 
 class Settings(BaseSettings):
-    auth_key: str = 'unusable_key'
-    api_key: str = 'qservice'
+    """Класс для хранения настроек."""
+    auth_key: str = "unusable_key"
+    api_key: str = "qservice"
 
     DATABASE_CONFIG = {
-        'host': os.environ['db_host'],
-        'port': os.environ['db_port'],
-        'database': os.environ['db_name'],
-        'user': os.environ['db_user'],
-        'password': os.environ['db_password']
+        "host": os.environ["db_host"],
+        "port": os.environ["db_port"],
+        "database": os.environ["db_name"],
+        "user": os.environ["db_user"],
+        "password": os.environ["db_password"]
     }
 
     class Config:
-        env_prefix = '.env'  # defaults to no prefix, i.e. ''
+        """Класс для хранения конфигов подключения."""
+        env_prefix = ".env"  # defaults to no prefix, i.e. ""
         fields = {
-            'api_server': os.environ['old_api_url'] + ':' + os.environ['old_api_port'],
+            "api_server": os.environ["old_api_url"] + ":" + os.environ["old_api_port"],
 
-            'auth_key': {
-                'env': 'my_auth_key',
+            "auth_key": {
+                "env": "my_auth_key",
             },
-            'redis_dsn': {
-                'env': ['service_redis_dsn', 'redis_url']
+            "redis_dsn": {
+                "env": ["service_redis_dsn", "redis_url"]
             },
-            'secret_for_token': {
-                'env': os.environ['secret_for_token'].encode()
+            "secret_for_token": {
+                "env": os.environ["secret_for_token"].encode()
             },
-            'salt_for_token': {
-                'env': os.environ['salt_for_token'].encode()
+            "salt_for_token": {
+                "env": os.environ["salt_for_token"].encode()
             },
-            'servers': {
-                'ldap': os.environ['ldap_server']
+            "servers": {
+                "ldap": os.environ["ldap_server"]
             },
-            'cred': {
-                'domain_auth': {
-                    'login': os.environ['old_api_user'],
-                    'password': os.environ['old_api_password']
+            "cred": {
+                "domain_auth": {
+                    "login": os.environ["old_api_user"],
+                    "password": os.environ["old_api_password"]
                 }
             },
-            'ldap': {
-                'search_tree': os.environ['ldap_search_tree'],
-                'search_tree_ca': os.environ['ldap_search_tree_ca']
+            "ldap": {
+                "search_tree": os.environ["ldap_search_tree"],
+                "search_tree_ca": os.environ["ldap_search_tree_ca"]
             },
-            'path': {
-                'config': os.environ['config_path']
+            "path": {
+                "config": os.environ["config_path"]
             },
-            'default_dt': os.environ['default_dt'],
+            "default_dt": os.environ["default_dt"],
         }
 
 
