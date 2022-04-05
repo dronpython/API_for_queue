@@ -3,30 +3,23 @@ import pathlib
 import logging
 from typing import Callable, Optional
 from uuid import uuid4
-from contextvars import ContextVar
 
 import uvicorn
 import json
 from fastapi import FastAPI, status, Request, Response, APIRouter
 from fastapi.routing import APIRoute
 
+from core.logging_.filters.requestId_filter import request_id as rqid
+from core.logging_.filters.endpoint_filter import endpoint
+
 from core.services.security import get_token, verify_request, get_hash
 from core.settings import config
 from core.connectors.DB import DB
-from core.services.database_utility import is_data_added_to_db, is_request_done, get_dt, get_status, \
-    get_hashed_data_from_db, MAIN_TABLE, RESPONSE_TABLE, SELECT_DONE_REQ_WITH_RESPONSE, PENDING_STATUS, WORKING_STATUS
+from core.services.database_utility import is_data_added_to_db, is_request_done, get_dt,\
+    get_hashed_data_from_db, MAIN_TABLE, RESPONSE_TABLE, SELECT_DONE_REQ_WITH_RESPONSE
 from core.services.data_processing import get_data_from_request
 
 logger = logging.getLogger(__name__)
-
-rqid: ContextVar[str] = ContextVar("request_id", default="service")
-
-
-class RequestIdFilter(logging.Filter):
-    """Добавить id запроса в каждую запись лога."""
-    def filter(self, record):
-        record.request_id = rqid.get()
-        return True
 
 
 class ContextIncludedRoute(APIRoute):
@@ -39,6 +32,7 @@ class ContextIncludedRoute(APIRoute):
             username = await verify_request(request.headers)
             request_id: str = str(uuid4())
             rqid.set(request_id)
+            endpoint.set(request.scope["path"])
             response: Response = await original_route_handler(request)
 
             _, _, body, headers = await get_data_from_request(request)
@@ -63,9 +57,11 @@ class ContextIncludedRoute(APIRoute):
 
             for _ in range(delta_time):
                 if is_request_done(request_id):
-                    query_result = DB.universal_select(SELECT_DONE_REQ_WITH_RESPONSE.format(request_id))
+                    query_result = DB.universal_select(
+                        SELECT_DONE_REQ_WITH_RESPONSE.format(request_id))
                     logger.info(f"Come to result with {query_result}")
-                    logger.info(f"Request_id: {request_id} Got response. Status: {query_result[0].status}. "
+                    logger.info(f"Request_id: {request_id} Got response. "
+                                f"Status: {query_result[0].status}. "
                                 f"Body: {query_result[0].response_body}")
                     body = {"message": query_result[0].status,
                             "response": query_result[0].response_body,
@@ -139,18 +135,25 @@ async def update_request(request_id: str, request: Request):
 
 
 @app.get("/queue/info")
-async def get_queue_info(status: Optional[str] = None, period: Optional[int] = None, endpoint: Optional[str] = None,
+async def get_queue_info(status: Optional[str] = None,
+                         period: Optional[int] = None,
+                         endpoint: Optional[str] = None,
                          directory: Optional[str] = None):
     """Получить информацию об очереди."""
-    result: dict = DB.get_queue_statistics(status=status, period=period, endpoint=endpoint, directory=directory)
+    result: dict = DB.get_queue_statistics(status=status,
+                                           period=period,
+                                           endpoint=endpoint,
+                                           directory=directory)
     return result
 
 
-@app.get("/queue/processing_info")
-async def get_queue_info(status: Optional[str] = None, period: Optional[str] = None, endpoint: Optional[str] = None,
-                         directory: Optional[str] = None):
-    """Получить информацию об очереди."""
-    pass
+# @app.get("/queue/processing_info")
+# async def get_queue_info(status: Optional[str] = None,
+#                          period: Optional[str] = None,
+#                          endpoint: Optional[str] = None,
+#                          directory: Optional[str] = None):
+#     """Получить информацию об очереди."""
+#     pass
 
 
 @app.get("/queue/get_requests_status")
