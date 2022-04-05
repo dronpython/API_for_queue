@@ -38,8 +38,8 @@ handlers:
       - epfilter
       - sysepfilter
     formatter: simple
-    # host: log-receiver
-    host: 'localhost'
+    host: log-receiver
+    # host: 'localhost'
     port: 9021
 
 root:
