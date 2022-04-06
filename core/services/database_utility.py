@@ -27,9 +27,8 @@ async def is_data_added_to_db(request: Request, username: str, request_id: str, 
     """Проверяет добавлена ли запись о запросе в базу, если нет - значит он уже есть в базе."""
     request_status: str = DEFAULT_STATUS
     path, method, body, headers = await get_data_from_request(request)
-    log_info = f"Request_id: {request_id}. "
     # ToDo check domain
-    logger.info(f"{log_info} Got request with params: endpoint: {path}, body: {body}, "
+    logger.info(f"Got request with params: endpoint: {path}, body: {body}, "
                 f"headers: {headers}, username: {username}, status: {request_status}, method: {method}")
 
     if not await is_hashed_data_exist(hashed_data) or not await is_request_pending_working(hashed_data):
@@ -47,7 +46,7 @@ async def get_dt(username: str, request_id: str) -> int:
     delta_time: Optional[int] = acl_data.get("dt")
     if delta_time is None:
         delta_time = int(config.fields.get("default_dt"))
-    logger.info(f"Request id: {request_id}. User dt is: {delta_time}. Waiting for response..")
+    logger.info(f"User dt is: {delta_time}. Waiting for response..")
     return delta_time
 
 
