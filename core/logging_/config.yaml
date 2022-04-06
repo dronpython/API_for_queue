@@ -15,7 +15,13 @@ filters:
   appname:
     (): core.logging_.filters.namefilter.AppFilter
   requestid:
-    (): main.RequestIdFilter
+    (): core.logging_.filters.requestId_filter.RequestIdFilter
+  scfilter:
+    (): core.logging_.filters.statusCodeFilter.StatusCodeFilter
+  epfilter:
+    (): core.logging_.filters.endpoint_filter.EndpointFilter
+  sysepfilter:
+    (): core.logging_.filters.systemEndpointFilter.SystemEndpointFilter
 
 formatters:
   simple:
@@ -28,6 +34,9 @@ handlers:
       - masking
       - appname
       - requestid
+      - scfilter
+      - epfilter
+      - sysepfilter
     formatter: simple
     host: log-receiver
     # host: 'localhost'
