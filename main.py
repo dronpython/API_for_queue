@@ -117,6 +117,8 @@ async def get_request(request_id: str, response: Response):
                 "status": result_main["status"],
                 "body": {}
             }
+        logger.info(f"Response status: {str(payload['status'])}. "
+                    f"Response body: {str(payload['body'])}")
         return payload
     else:
         response.status_code = status.HTTP_404_NOT_FOUND
