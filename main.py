@@ -97,6 +97,8 @@ async def login_for_access_token_new(request: Request):
 @app.get("/queue/request/{request_id}")
 async def get_request(request_id: str, response: Response):
     """Получить информацию о запросе по request_uuid."""
+    rqid.set(request_id)
+    endpoint.set("/queue/request")
     result_main: dict = DB.select_data(MAIN_TABLE, "status", param_name="request_id",
                                        param_value=request_id, fetch_one=True)
     if result_main:
@@ -127,6 +129,8 @@ async def get_request(request_id: str, response: Response):
 @app.put("/queue/request/{request_id}")
 async def update_request(request_id: str, request: Request):
     """Обновить информацию о запросе по request_id."""
+    rqid.set(request_id)
+    endpoint.set("/queue/request")
     body: dict = await request.json()
     param_name = "request_id"
     result: dict = DB.update_data(MAIN_TABLE, field_name=body["field"], field_value=body["value"],
