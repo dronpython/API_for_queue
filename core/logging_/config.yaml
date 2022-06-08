@@ -13,29 +13,29 @@ filters:
       - "(?<=(?:\"|')Auth(?:\"|'): \\()(.*)(?=\\), (?:\"|'))"
       - "(?<=(?:\"|')access_token(?:\"|'): (?:\"|'))[^\"']+(?=(?:\"|'))"
   appname:
-    (): logging_.filters.namefilter.AppFilter
+    (): core.logging_.filters.namefilter.AppFilter
   requestid:
-    (): logging_.filters.requestId_filter.RequestIdFilter
+    (): core.logging_.filters.requestId_filter.RequestIdFilter
   scfilter:
-    (): logging_.filters.statusCodeFilter.StatusCodeFilter
+    (): core.logging_.filters.statusCodeFilter.StatusCodeFilter
   epfilter:
-    (): logging_.filters.endpoint_filter.EndpointFilter
+    (): core.logging_.filters.endpoint_filter.EndpointFilter
   sysepfilter:
-    (): logging_.filters.systemEndpointFilter.SystemEndpointFilter
+    (): core.logging_.filters.systemEndpointFilter.SystemEndpointFilter
   ticketidfilter:
-    (): logging_.filters.ticket_id_filter.TicketIdFilter
+    (): core.logging_.filters.ticket_id_filter.TicketIdFilter
   tasktypefilter:
-    (): logging_.filters.task_type_filter.TaskTypeFilter
+    (): core.logging_.filters.task_type_filter.TaskTypeFilter
   tasksubtypefilter:
-    (): logging_.filters.task_subtype_filter.TaskSubtypeFilter
+    (): core.logging_.filters.task_subtype_filter.TaskSubtypeFilter
   taskstatusfilter:
-    (): logging_.filters.task_status_filter.TaskStatusFilter
+    (): core.logging_.filters.task_status_filter.TaskStatusFilter
   taskmessagefilter:
-    (): logging_.filters.task_message_filter.TaskMessageFilter
+    (): core.logging_.filters.task_message_filter.TaskMessageFilter
   taskerrorsfilter:
-    (): logging_.filters.task_errors_filter.TaskErrorsFilter
+    (): core.logging_.filters.task_errors_filter.TaskErrorsFilter
   tasksystemfilter:
-    (): logging_.filters.task_system_filter.TaskSystemFilter
+    (): core.logging_.filters.task_system_filter.TaskSystemFilter
 
 
 formatters:
