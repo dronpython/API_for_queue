@@ -103,13 +103,15 @@ async def get_request(request_id: str, response: Response):
                                        param_value=request_id, fetch_one=True)
     if result_main:
         response.status_code = status.HTTP_200_OK
+        result_responses = DB.select_data(RESPONSE_TABLE, param_name="request_id",
+                                          param_value=request_id, fetch_one=True)
+
         if result_main["status"] == "done":
-            result_responses = DB.select_data(RESPONSE_TABLE, param_name="request_id",
-                                              param_value=request_id, fetch_one=True)
             payload = {
                 "request_id": result_responses["request_id"],
                 "endpoint": result_main["endpoint"],
                 "status": result_main["status"],
+                "status_code": result_responses["response_status_code"],
                 "body": result_responses["response_body"]
             }
         else:
@@ -117,6 +119,7 @@ async def get_request(request_id: str, response: Response):
                 "request_id": result_main["request_id"],
                 "endpoint": result_main["endpoint"],
                 "status": result_main["status"],
+                "status_code": result_responses["response_status_code"],
                 "body": {}
             }
         logger.info(f"Response: {str(payload)}")
